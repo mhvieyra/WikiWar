@@ -133,10 +133,7 @@ export function drawEnemy(e) {
   const sn = useGunnerArt ? 'enemyGunner' : okSpr('enemyRun') ? 'enemyRun' : null;
   if (e.flash > 0) ctx.globalAlpha = .55;
   if (sn) {
-    ctx.save();
-    if (e.hue) ctx.filter = 'hue-rotate(' + e.hue + 'deg)';
-    drawSpr(sn, e.t, e.x, e.y, e.face < 0, 0, .5, 1);
-    ctx.restore();
+    drawSpr(sn, e.t, e.x, e.y, e.face < 0, 0, .5, 1, true, e.hue);
   } else drawStick(e.x, e.y, { face: e.face, col, t: e.t, moving, air });
   // el pistolero siempre lleva el arma dibujada aparte (no tiene sprite con
   // arma propia); el gunner solo si esta usando el placeholder sin sprite.
