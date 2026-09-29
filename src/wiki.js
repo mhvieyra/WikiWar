@@ -79,6 +79,13 @@ export function buildDOM(data) {
   for (let i = 3; i < kids.length; i++) {
     if (kids[i].getBoundingClientRect().bottom - cr.top > MAXH) { for (let j = kids.length - 1; j >= i; j--) kids[j].remove(); break; }
   }
+  // no dejar el nivel terminando en un titulo suelto ni en un bloque flotante
+  const tail = [...wrap.children];
+  while (tail.length > 3) {
+    const k = tail[tail.length - 1];
+    if (!/^H[1-6]$/.test(k.tagName) && !k.classList.contains('mw-heading') && !/^(FIGURE|STYLE)$/.test(k.tagName) && !/\b(thumb|tmulti)\b/.test(k.className)) break;
+    k.remove(); tail.pop();
+  }
 
   // envolver cada palabra en un span (cada palabra es una plataforma)
   const tw = document.createTreeWalker(c, NodeFilter.SHOW_TEXT), nodes = [];
