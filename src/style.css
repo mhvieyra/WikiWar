@@ -1,7 +1,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:#fafaf7;color:#202122;
   font-family:'Linux Libertine','Georgia','Times New Roman',serif;user-select:none;-webkit-user-select:none}
-body.play{cursor:crosshair}
+body.play{cursor:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDI4IDI4Ij4KPGcgc3Ryb2tlPSIjMGIzZDFmIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+CjxsaW5lIHgxPSIxNCIgeTE9IjIiIHgyPSIxNCIgeTI9IjI2Ii8+CjxsaW5lIHgxPSIyIiB5MT0iMTQiIHgyPSIyNiIgeTI9IjE0Ii8+CjwvZz4KPGcgc3Ryb2tlPSIjMmVlODVjIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+CjxsaW5lIHgxPSIxNCIgeTE9IjIiIHgyPSIxNCIgeTI9IjI2Ii8+CjxsaW5lIHgxPSIyIiB5MT0iMTQiIHgyPSIyNiIgeTI9IjE0Ii8+CjwvZz4KPC9zdmc+") 14 14,crosshair}
 #page{position:absolute;left:0;top:0;width:100%;will-change:transform;pointer-events:none}
 #content{width:860px;margin:0 auto;padding:60px 0 260px;font-size:18px;line-height:30px}
 #content h1.t{font-size:44px;line-height:60px;margin:0 0 20px;font-weight:normal;border-bottom:1px solid #a2a9b1}
