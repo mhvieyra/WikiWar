@@ -53,58 +53,72 @@ const SHOULDER_LOCAL_Y = -29;
 export const GUN_Y = SHOULDER_LOCAL_Y * STICK_SCALE;
 export const CHEST_Y = (-16 + SHOULDER_LOCAL_Y) / 2 * STICK_SCALE;
 
+// Color del contorno oscuro que se dibuja detras de cada parte (imita el
+// borde marcado tipo comic de la referencia).
+const OUTLINE = '#15151f';
+
+// Traza un path dos veces (contorno grueso oscuro, despues el color real
+// encima mas fino) para lograr el efecto de silueta con borde marcado.
+function strokeOutlined(c, path, width, col) {
+  c.lineWidth = width + 5; c.strokeStyle = OUTLINE; c.stroke(path);
+  c.lineWidth = width; c.strokeStyle = col; c.stroke(path);
+}
+
 // Placeholder vectorial de un stickman, usado para el jugador y los
 // enemigos cuando no hay sprite disponible. Silueta rellena tipo capsula
-// (torso y miembros gruesos con puntas redondeadas), no lineas finas: el
-// grosor de cada trazo redondeado hace de "relleno". Soporta piernas con
-// rodilla, brazo con codo, cabeza pegada al torso y pose agachada (o.crouch).
+// (torso y miembros gruesos con puntas redondeadas) con contorno oscuro,
+// cabeza ovalada pegada al torso, piernas con rodilla y pose agachada
+// (o.crouch), siguiendo la referencia que paso el usuario pero en vector
+// liso, no pixelart.
 export function drawStick(x, y, o) {
   const c = ctx;
   c.save(); c.translate(Math.round(x), Math.round(y));
   c.scale(STICK_SCALE, STICK_SCALE);
   if (o.spin) { c.translate(0, -22); c.rotate(o.spin * o.face); c.translate(0, 22); }
-  c.strokeStyle = o.col; c.lineCap = 'round'; c.lineJoin = 'round';
+  c.lineCap = 'round'; c.lineJoin = 'round';
   const crouch = !!o.crouch && !o.air;
   const hipY = crouch ? -8 : -16;
   const shY = crouch ? -17 : SHOULDER_LOCAL_Y;
   const headY = crouch ? -25 : -37;
-  const headR = 9;
-  const sw = o.moving && !o.air && !crouch ? Math.sin(o.t * 16) : 0;
+  const headRX = 7.5, headRY = 10;
+  // parado (no crouch, no aire, no moviendose): postura con piernas separadas,
+  // no juntas en una sola linea. sw controla cuanto se abren/mueven.
+  const sw = o.air || crouch ? 0 : o.moving ? Math.sin(o.t * 16) : .55;
 
   // piernas (con rodilla)
-  c.lineWidth = 7;
-  c.beginPath();
+  const legs = new Path2D();
   if (o.air) {
-    c.moveTo(0, hipY); c.lineTo(-6, hipY + 9); c.lineTo(-8, hipY + 17);
-    c.moveTo(0, hipY); c.lineTo(8, hipY + 7); c.lineTo(10, hipY + 15);
+    legs.moveTo(0, hipY); legs.lineTo(-6, hipY + 9); legs.lineTo(-8, hipY + 17);
+    legs.moveTo(0, hipY); legs.lineTo(8, hipY + 7); legs.lineTo(10, hipY + 15);
   } else if (crouch) {
-    c.moveTo(0, hipY); c.lineTo(-9, hipY * .45); c.lineTo(-6, 0);
-    c.moveTo(0, hipY); c.lineTo(9, hipY * .45); c.lineTo(6, 0);
+    legs.moveTo(0, hipY); legs.lineTo(-9, hipY * .45); legs.lineTo(-6, 0);
+    legs.moveTo(0, hipY); legs.lineTo(9, hipY * .45); legs.lineTo(6, 0);
   } else {
     const kneeY = hipY * .5 - Math.abs(sw) * 3;
-    c.moveTo(0, hipY); c.lineTo(sw * 5, kneeY); c.lineTo(sw * 10, 0);
-    c.moveTo(0, hipY); c.lineTo(-sw * 5, kneeY); c.lineTo(-sw * 10, 0);
+    legs.moveTo(0, hipY); legs.lineTo(sw * 5, kneeY); legs.lineTo(sw * 10, 0);
+    legs.moveTo(0, hipY); legs.lineTo(-sw * 5, kneeY); legs.lineTo(-sw * 10, 0);
   }
-  c.stroke();
+  strokeOutlined(c, legs, 7, o.col);
 
   // torso (grueso, sin cuello: la cabeza se apoya directo encima)
-  c.lineWidth = 10;
-  c.beginPath(); c.moveTo(0, hipY); c.lineTo(0, shY); c.stroke();
+  const torso = new Path2D(); torso.moveTo(0, hipY); torso.lineTo(0, shY);
+  strokeOutlined(c, torso, 10, o.col);
 
   // brazo (con codo), pegado al cuerpo
-  c.lineWidth = 6;
-  c.beginPath();
+  const arm = new Path2D();
   if (o.air) {
-    c.moveTo(0, shY + 2); c.lineTo(-o.face * 7, shY - 2); c.lineTo(-o.face * 9, shY - 9);
+    arm.moveTo(0, shY + 2); arm.lineTo(-o.face * 7, shY - 2); arm.lineTo(-o.face * 9, shY - 9);
   } else if (crouch) {
-    c.moveTo(0, shY + 2); c.lineTo(-o.face * 5, shY + 10); c.lineTo(-o.face * 2, hipY + 3);
+    arm.moveTo(0, shY + 2); arm.lineTo(-o.face * 5, shY + 10); arm.lineTo(-o.face * 2, hipY + 3);
   } else {
     const armSw = o.moving ? Math.sin(o.t * 16) * 3 : 0;
-    c.moveTo(0, shY + 2); c.lineTo(-o.face * 6, shY + 8 + armSw); c.lineTo(-o.face * 3, shY + 16 + armSw);
+    arm.moveTo(0, shY + 2); arm.lineTo(-o.face * 6, shY + 8 + armSw); arm.lineTo(-o.face * 3, shY + 16 + armSw);
   }
-  c.stroke();
+  strokeOutlined(c, arm, 6, o.col);
 
-  c.fillStyle = o.col; c.beginPath(); c.arc(0, headY, headR, 0, 6.283); c.fill();
+  // cabeza (ovalada, con contorno)
+  c.beginPath(); c.ellipse(0, headY, headRX + 2, headRY + 2, 0, 0, 6.283); c.fillStyle = OUTLINE; c.fill();
+  c.beginPath(); c.ellipse(0, headY, headRX, headRY, 0, 0, 6.283); c.fillStyle = o.col; c.fill();
   c.restore();
 }
 
@@ -116,15 +130,28 @@ export function drawGun(name, x, y, a, col) {
     const d = SPRITES[spriteName];
     ctx.drawImage(d.img, 0, 0, d.fw, d.fh, -d.fw * SPR_SCALE * .2, -d.fh * SPR_SCALE * .5, d.fw * SPR_SCALE, d.fh * SPR_SCALE);
   } else {
-    ctx.strokeStyle = col; ctx.lineWidth = 12; ctx.lineCap = 'round';
+    ctx.strokeStyle = OUTLINE; ctx.lineWidth = 16; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(10, 0); ctx.stroke();
-    const len = name === 0 ? 30 : name === 1 ? 42 : 50, h = name === 2 ? 20 : 16;
-    ctx.fillStyle = '#20232a';
-    ctx.beginPath(); ctx.roundRect(6, -h / 2, len, h, h / 3); ctx.fill();
-    ctx.fillStyle = '#3fa9f5';
-    ctx.beginPath(); ctx.roundRect(6 + len * .5, -h / 2 + 3, len * .42, h - 6, (h - 6) / 2); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 11;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(10, 0); ctx.stroke();
+    const len = name === 0 ? 30 : name === 1 ? 42 : 50, h = name === 2 ? 22 : 18;
+    const body = new Path2D(); body.roundRect(6, -h / 2, len, h, h / 3);
+    ctx.lineJoin = 'round'; ctx.strokeStyle = OUTLINE; ctx.lineWidth = 3;
+    ctx.fillStyle = '#242832'; ctx.fill(body); ctx.stroke(body);
+    // aleta/mira arriba, cerca de la mano
+    ctx.fillStyle = '#242832';
+    ctx.beginPath(); ctx.roundRect(9, -h / 2 - 6, len * .22, 8, 2); ctx.fill(); ctx.stroke();
+    // ventana celeste (mira) y franja de cañon celeste claro
+    ctx.fillStyle = '#2bb8e8';
+    ctx.beginPath(); ctx.roundRect(6 + len * .1, -h / 2 + 2, len * .18, h * .4, 3); ctx.fill();
+    ctx.fillStyle = '#8fe3ff';
+    ctx.beginPath(); ctx.roundRect(6 + len * .48, h * .06, len * .42, h * .28, (h * .28) / 2); ctx.fill();
+    // acento amarillo
     ctx.fillStyle = '#ffd166';
-    ctx.beginPath(); ctx.arc(6 + len - 3, 0, 3, 0, 6.283); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(6 + len * .34, -1); ctx.lineTo(6 + len * .44, -h * .22); ctx.lineTo(6 + len * .44, h * .05); ctx.closePath(); ctx.fill();
+    // punta del cañon, un poco mas clara
+    ctx.fillStyle = '#3a4050';
+    ctx.beginPath(); ctx.roundRect(6 + len - 6, -h * .22, 8, h * .44, 3); ctx.fill();
   }
   ctx.restore();
 }

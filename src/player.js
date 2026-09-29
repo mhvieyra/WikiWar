@@ -34,6 +34,8 @@ export function throwGrenade() {
   playSfx('grenade_throw', 300, .1, 'triangle', .04, 200);
 }
 
+const PLAYER_COL = '#ff7a3d';
+
 export function drawPlayer() {
   const p = state.p;
   if (p.inv > 0 && Math.floor(p.inv * 12) % 2) return;
@@ -45,8 +47,8 @@ export function drawPlayer() {
     if (p.spin) { ctx.translate(p.x, p.y - 20); ctx.rotate(p.spin * p.face); ctx.translate(-p.x, -(p.y - 20)); }
     drawSpr(sn, p.t, p.x, p.y, p.face < 0, 0, .5, 1);
     ctx.restore();
-  } else drawStick(p.x, p.y, { face: p.face, col: '#111', t: p.t, moving, air, spin: p.spin, crouch: p.crouch });
-  ctx.strokeStyle = '#111'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+  } else drawStick(p.x, p.y, { face: p.face, col: PLAYER_COL, t: p.t, moving, air, spin: p.spin, crouch: p.crouch });
+  ctx.strokeStyle = PLAYER_COL; ctx.lineWidth = 12; ctx.lineCap = 'round';
   if (!okSpr(sn || '')) { ctx.beginPath(); ctx.moveTo(p.x, p.y + GUN_Y); ctx.lineTo(p.x + Math.cos(p.aim) * 16, p.y + GUN_Y + Math.sin(p.aim) * 16); ctx.stroke(); }
-  drawGun(S.wi, p.x, p.y + GUN_Y, p.aim, '#111');
+  drawGun(S.wi, p.x, p.y + GUN_Y, p.aim, PLAYER_COL);
 }
