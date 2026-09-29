@@ -1,7 +1,7 @@
 // Fisica compartida por el jugador, los enemigos y las granadas: gravedad,
 // colision contra las plataformas-palabra (desde arriba, tipo "one way
 // platform") y el piso del nivel.
-import { RS, G } from './config.js';
+import { RS, G, STAND_H } from './config.js';
 import { state } from './state.js';
 import { clamp } from './utils.js';
 
@@ -26,4 +26,22 @@ export function physics(e, dt) {
   }
   if (e.y >= state.L.floorY) { e.y = state.L.floorY; e.vy = 0; e.onGround = true; }
   if (e.drop > 0) e.drop -= dt;
+}
+
+// Hay una plataforma solida en la banda que se libera al levantarse de
+// agachado (desde el techo agachado -p.h- hasta el techo de pie -STAND_H-)?
+// Se usa para no parar al jugador dentro de una plataforma.
+export function canStandUp(p) {
+  const top = p.y - STAND_H, bottom = p.y - p.h;
+  if (bottom <= top) return true;
+  const r0 = Math.floor(top / RS), r1 = Math.floor(bottom / RS);
+  for (let r = r0; r <= r1; r++) {
+    const arr = state.L.full.get(r); if (!arr) continue;
+    for (const pl of arr) {
+      if (!pl.alive) continue;
+      if (p.x + p.w / 2 < pl.x - 1 || p.x - p.w / 2 > pl.x + pl.w + 1) continue;
+      if (pl.y + pl.h > top && pl.y < bottom) return false;
+    }
+  }
+  return true;
 }

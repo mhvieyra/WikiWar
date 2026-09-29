@@ -30,8 +30,11 @@ describe este archivo.
 | `player_run.png` | 32x32 | 6 a 8 | pies, centro abajo | Jugador corriendo |
 | `player_jump.png` | 32x32 | 1 | pies, centro abajo | Jugador en el aire |
 | `player_fly.png` | 32x32 | 2 a 4 | pies, centro abajo | Jugador volando (jetpack) |
+| `player_crouch.png` | 32x32 | 2 | pies, centro abajo | Jugador agachado quieto (respirando) |
+| `player_crouch_walk.png` | 32x32 | 6 | pies, centro abajo | Jugador agachado caminando |
+| `player_arm.png` | 16x16 | 1 | hombro en el pixel (1.5, 8.5), apunta a +x | Brazo que apunta al mouse (aparte del cuerpo) |
 | `enemy_run.png` | 32x32 | 6 a 8 | pies, centro abajo | Enemigo cuerpo a cuerpo |
-| `enemy_gunner.png` | 32x32 | 6 a 8 | pies, centro abajo | Enemigo que dispara |
+| `enemy_gunner.png` | 32x32 | 6 a 8 | pies, centro abajo | Enemigo que dispara (con el arma ya dibujada) |
 | `enemy_die.png` | 32x32 | 4 a 6 | pies, centro abajo | Muerte del enemigo (se reproduce una vez) |
 | `gun_pistol.png` | 16x16 | 1 | 20% desde la izquierda, mitad vertical | Pistola |
 | `gun_smg.png` | 24x16 | 1 | igual | SMG |
@@ -62,10 +65,17 @@ mismos parámetros de siempre.
 Si agregás un arma nueva en `src/weapons.js`, la clave de su disparo es
 siempre `shoot_<nombre en minúsculas>` (el campo `name` del arma).
 
+> `public/sprites/player_walk.png` está subido pero **no se usa todavía**: el
+> juego no distingue entre "caminar" y "correr" (una sola velocidad, un solo
+> estado `moving`), así que por ahora `player_run.png` cubre cualquier
+> movimiento horizontal en el piso.
+
 ## Detalles que conviene saber
 
-- **Las armas son sprites aparte** del cuerpo. El juego las rota hacia el mouse desde el hombro del stickman, así que dibujá el cuerpo con los brazos sueltos o bajos y el arma mirando a la derecha. Si apuntás a la izquierda se espeja en vertical para que no quede al revés.
-- **Hitbox:** el jugador y los enemigos miden 16x40 px en el juego, con independencia del tamaño del sprite. Con un frame de 32x32 a x2 el dibujo queda de 64x64, más grande que la hitbox. Si querés que coincidan más, dibujá el stickman ocupando el centro del frame.
+- **El brazo y el arma del jugador son sprites aparte** del cuerpo (`player_arm.png` + `gun_*.png`). El juego rota el brazo hacia el mouse desde el hombro, y el arma sale de la mano (16px más allá del hombro en la dirección de apuntado). Por eso el cuerpo (`player_idle.png`, `player_run.png`, etc.) va **sin brazo**: se dibuja el torso y las piernas nomás, el brazo se superpone encima. Los enemigos son la excepción: `enemy_gunner.png` ya trae el brazo/arma dibujado en el mismo sprite, no hay `enemy_arm.png` aparte.
+- **`player_arm.png`** mide 16x16, el hombro (el pivote de rotación) es el pixel (1.5, 8.5), y el arte apunta hacia +x (derecha) en reposo. Al apuntar a la izquierda se espeja en **vertical** (no horizontal), igual que las armas.
+- **Altura del hombro sobre los pies:** 32px de pie, 28px agachado (`SHOULDER_STAND_Y`/`SHOULDER_CROUCH_Y` en `src/sprites.js`). Ahí se ancla el brazo, y de ahí sale el ángulo de apuntado y el origen de balas/granadas.
+- **Hitbox:** el jugador mide 16px de ancho por 40px de alto de pie, 24px agachado (`STAND_H`/`CROUCH_H` en `src/config.js`); los enemigos miden 16x40 fijo. Todo esto es independiente del tamaño del sprite. Con un frame de 32x32 a x2 el dibujo queda de 64x64, más grande que la hitbox. Si querés que coincidan más, dibujá el stickman ocupando el centro del frame.
 - **Velocidad de animación** (fps) y tamaños de frame están en el objeto `SPRITES` de `src/sprites.js`. Si tus frames miden otra cosa, cambiás `fw`, `fh` y `fps` ahí.
 - Si un sprite o sonido existe pero querés volver al placeholder, borrá el archivo (o sacalo de `public/`).
 

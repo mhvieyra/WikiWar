@@ -2,16 +2,16 @@
 // nivel, corre el update/draw de cada frame, y conecta el input del
 // teclado y el mouse con el resto de los modulos.
 import './style.css';
-import { RS, REGEN, RUN, JUMP, FLY_ACC, FLY_MAX, FUEL_DRAIN, FUEL_REGEN } from './config.js';
+import { RS, REGEN, RUN, JUMP, FLY_ACC, FLY_MAX, FUEL_DRAIN, FUEL_REGEN, STAND_H, CROUCH_H, CROUCH_SPEED_MULT } from './config.js';
 import { S, state, cv, ctx } from './state.js';
 import { $, clamp, norm, sleep, nextFrame } from './utils.js';
 import { fetchParse, fetchInfo, buildDOM, buildLevel, measure } from './wiki.js';
 import { spawnPlayer, fire, throwGrenade, drawPlayer } from './player.js';
 import { spawnEnemy, updateEnemy, drawEnemy, hitEnemy } from './enemies.js';
-import { physics } from './physics.js';
+import { physics, canStandUp } from './physics.js';
 import { WEAPONS } from './weapons.js';
 import { playSfx, boom, toggleMuted } from './audio.js';
-import { okSpr, drawSpr, GUN_Y, CHEST_Y } from './sprites.js';
+import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
 import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI } from './ui.js';
 
 /* ------------------------------------------------------------------ canvas */
@@ -123,12 +123,23 @@ function explode(x, y) {
 function update(dt) {
   const p = state.p, L = state.L, keys = state.keys;
   S.time += dt; S.cool -= dt; S.gcool -= dt; p.t += dt; p.inv -= dt;
+
+  // Agacharse con C o Shift (ArrowDown/S es aparte, y sigue siendo solo para
+  // bajar de las plataformas). En el aire nunca queda agachado. Al soltar la
+  // tecla solo se para si hay espacio libre arriba, si no sigue agachado.
+  const crouchKey = keys.KeyC || keys.ShiftLeft || keys.ShiftRight;
+  if (!p.onGround) p.crouch = false;
+  else if (crouchKey) p.crouch = true;
+  else if (p.crouch && canStandUp(p)) p.crouch = false;
+  p.h = p.crouch ? CROUCH_H : STAND_H;
+
   const left = keys.KeyA || keys.ArrowLeft, right = keys.KeyD || keys.ArrowRight;
   const ax = (right ? 1 : 0) - (left ? 1 : 0);
-  p.vx += (ax * RUN - p.vx) * Math.min(1, (p.onGround ? 18 : 6) * dt);
+  const spd = RUN * (p.crouch ? CROUCH_SPEED_MULT : 1);
+  p.vx += (ax * spd - p.vx) * Math.min(1, (p.onGround ? 18 : 6) * dt);
   if (!ax && p.onGround && Math.abs(p.vx) < 5) p.vx = 0;
 
-  const hold = keys.Space || keys.KeyW || keys.ArrowUp;
+  const hold = (keys.Space || keys.KeyW || keys.ArrowUp) && !p.crouch;
   if (hold) p.holdT += dt; else p.holdT = 0;
   p.flying = false;
   if (!p.onGround && hold && p.holdT > .2 && p.fuel > 0) {
@@ -136,12 +147,12 @@ function update(dt) {
     if (Math.random() < .7) state.parts.push({ x: p.x + (Math.random() - .5) * 6, y: p.y, vx: (Math.random() - .5) * 40, vy: 120 + Math.random() * 100, life: .35, c: Math.random() < .5 ? '#ff7a3d' : '#ffd166', s: 3 });
   }
   if (p.onGround) { p.fuel = Math.min(100, p.fuel + FUEL_REGEN * dt); p.usedFlip = false; }
-  p.crouch = p.onGround && (keys.KeyS || keys.ArrowDown);
-  if (p.crouch) p.drop = .22;
+  if ((keys.KeyS || keys.ArrowDown) && p.onGround) p.drop = .22;
   if (p.flipping) { p.spin += 13 * dt; if (p.spin >= 6.283) { p.spin = 0; p.flipping = false; } }
 
   const wy = state.my + state.cam;
-  p.aim = Math.atan2(wy - (p.y + GUN_Y), state.mx - p.x); p.face = Math.cos(p.aim) >= 0 ? 1 : -1;
+  const shoulderY = p.crouch ? SHOULDER_CROUCH_Y : SHOULDER_STAND_Y;
+  p.aim = Math.atan2(wy - (p.y + shoulderY), state.mx - p.x); p.face = Math.cos(p.aim) >= 0 ? 1 : -1;
   if (state.mouseDown && S.cool <= 0) fire();
   physics(p, dt);
 
@@ -292,8 +303,8 @@ addEventListener('keydown', e => {
   if (!e.repeat) {
     const p = state.p;
     if ((e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp')) {
-      if (p.onGround) { p.vy = -JUMP; p.onGround = false; p.holdT = 0; playSfx('jump', 300, .1, 'square', .03, 250); }
-      else if (!p.usedFlip && !p.flying) { p.usedFlip = true; p.flipping = true; p.spin = .01; }
+      if (p.onGround && !p.crouch) { p.vy = -JUMP; p.onGround = false; p.holdT = 0; playSfx('jump', 300, .1, 'square', .03, 250); }
+      else if (!p.onGround && !p.usedFlip && !p.flying) { p.usedFlip = true; p.flipping = true; p.spin = .01; }
     }
     if (e.code === 'KeyE' || e.code === 'Enter') { if (state.near) { S.clicks++; loadLevel(state.near.link, false); } }
     if (e.code === 'Digit1') S.wi = 0;

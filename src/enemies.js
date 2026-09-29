@@ -2,7 +2,7 @@
 import { RS, JUMP } from './config.js';
 import { S, state, ctx } from './state.js';
 import { playSfx } from './audio.js';
-import { okSpr, drawSpr, drawStick, drawGun, GUN_Y, CHEST_Y } from './sprites.js';
+import { okSpr, drawSpr, drawStick, drawGun, SHOULDER_STAND_Y, CHEST_Y } from './sprites.js';
 import { physics } from './physics.js';
 import { burst, hurt } from './main.js';
 
@@ -40,8 +40,8 @@ export function updateEnemy(e, dt) {
     e.cd -= dt;
     if (e.cd <= 0 && d < 640 && Math.abs(dy) < 280) {
       e.cd = 1.4 + Math.random() * .8;
-      const a = Math.atan2((p.y + GUN_Y) - (e.y + GUN_Y), dx) + (Math.random() - .5) * .18;
-      state.bullets.push({ x: e.x + Math.cos(a) * 16, y: e.y + GUN_Y + Math.sin(a) * 16, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, life: 1.6, dmg: 12, pierce: 1, own: 'e' });
+      const a = Math.atan2((p.y + SHOULDER_STAND_Y) - (e.y + SHOULDER_STAND_Y), dx) + (Math.random() - .5) * .18;
+      state.bullets.push({ x: e.x + Math.cos(a) * 16, y: e.y + SHOULDER_STAND_Y + Math.sin(a) * 16, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, life: 1.6, dmg: 12, pierce: 1, own: 'e' });
       playSfx('enemy_shoot', 240, .08, 'square', .025, -100);
     }
   } else e.vx = dir * e.speed;
@@ -77,10 +77,10 @@ export function drawEnemy(e) {
   else {
     drawStick(e.x, e.y, { face: e.face, col: e.type === 'gunner' ? '#8e2bb0' : '#c0392b', t: e.t, moving, air });
     if (e.type === 'gunner') {
-      const a = Math.atan2((p.y + GUN_Y) - (e.y + GUN_Y), p.x - e.x);
+      const a = Math.atan2((p.y + SHOULDER_STAND_Y) - (e.y + SHOULDER_STAND_Y), p.x - e.x);
       ctx.strokeStyle = '#8e2bb0'; ctx.lineWidth = 12; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(e.x, e.y + GUN_Y); ctx.lineTo(e.x + Math.cos(a) * 16, e.y + GUN_Y + Math.sin(a) * 16); ctx.stroke();
-      drawGun(0, e.x, e.y + GUN_Y, a, '#8e2bb0');
+      ctx.beginPath(); ctx.moveTo(e.x, e.y + SHOULDER_STAND_Y); ctx.lineTo(e.x + Math.cos(a) * 16, e.y + SHOULDER_STAND_Y + Math.sin(a) * 16); ctx.stroke();
+      drawGun(0, e.x, e.y + SHOULDER_STAND_Y, a, '#8e2bb0');
     }
   }
   ctx.globalAlpha = 1;

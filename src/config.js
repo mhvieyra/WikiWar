@@ -14,6 +14,10 @@ export const FLY_MAX = 340;
 export const FUEL_DRAIN = 40;
 export const FUEL_REGEN = 70;
 
+export const STAND_H = 40;                 // alto de la hitbox de pie
+export const CROUCH_H = 24;                // alto de la hitbox agachado
+export const CROUCH_SPEED_MULT = .5;       // velocidad horizontal agachado
+
 export const SPR_SCALE = 2;                // los sprites se dibujan x2 (pixel art)
 
 export const REMOVE = 'style,script,link,meta,.mw-editsection,sup,.reference,.reflist,.references,.mw-references-wrap,.navbox,.vertical-navbox,.metadata,.hatnote,.noprint,.ambox,.mw-empty-elt,.sistersitebox,#toc,.toc,.catlinks,.authority-control,.portal,.shortdescription,.side-box,.mw-cite-backlink,.error,.mbox-small,audio,video,.mw-tmh-player,.gallery,.mw-authority-control';
