@@ -3,11 +3,11 @@
 // HUD sobre el canvas. El flujo de partida (cargar nivel, reiniciar,
 // arrancar el juego) vive en main.js; ui.js lo llama cuando hace falta
 // (por ejemplo desde los botones del menu o de las pantallas de mensaje).
-import { PAIRS } from './config.js';
+import { PAIRS, SPR_SCALE, STRENGTH_MULT, STRENGTH_TIME } from './config.js';
 import { S, state, ctx } from './state.js';
 import { $, clamp, esc, fmtTime, norm } from './utils.js';
 import { WEAPONS } from './weapons.js';
-import { drawHeart } from './sprites.js';
+import { SPRITES, okSpr, drawHeart } from './sprites.js';
 import { resetRun, startGame } from './main.js';
 
 export function fade(on) { $('#fade').style.opacity = on ? 1 : 0; }
@@ -78,6 +78,21 @@ export function drawHud() {
   ctx.fillStyle = '#fff'; ctx.fillText('FUEL', 20, 62);
   ctx.fillStyle = '#111'; ctx.fillRect(62, 57, 116, 10); ctx.fillStyle = '#ff7a3d'; ctx.fillRect(62, 57, 116 * clamp(p.fuel / 100, 0, 1), 10);
   ctx.fillStyle = '#ffd166'; ctx.fillText('[' + (S.wi + 1) + '] ' + WEAPONS[S.wi].name, 20, 77);
+  // reserva de balas del arma actual (la pistola es infinita)
+  const ammo = S.ammo[S.wi], lim = WEAPONS[S.wi].ammo;
+  ctx.textAlign = 'right';
+  ctx.fillStyle = S.ammoFlash > 0 && Math.floor(S.ammoFlash * 10) % 2 ? '#fff' : !lim ? '#ffd166' : ammo <= 0 ? '#e63946' : ammo <= lim.max * .2 ? '#ff7a3d' : '#ffd166';
+  ctx.fillText(lim ? ammo + '/' + lim.max : '∞', 178, 77);
+  ctx.textAlign = 'left';
+  // indicador de la pocion de fuerza (solo mientras esta activa)
+  if (S.strengthT > 0) {
+    ctx.fillStyle = '#272727'; ctx.fillRect(10, 90, 178, 38); ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(10, 90, 178, 38);
+    if (okSpr('itemStrength')) { const d = SPRITES.itemStrength; ctx.drawImage(d.img, 0, 0, d.fw, d.fh, 14, 93, d.fw * SPR_SCALE, d.fh * SPR_SCALE); }
+    ctx.fillStyle = '#c77dff'; ctx.fillText('FUERZA x' + STRENGTH_MULT, 52, 103);
+    ctx.textAlign = 'right'; ctx.fillText(Math.ceil(S.strengthT) + 's', 178, 103); ctx.textAlign = 'left';
+    ctx.fillStyle = '#111'; ctx.fillRect(52, 112, 126, 8);
+    ctx.fillStyle = S.strengthT < 3 && Math.floor(S.strengthT * 6) % 2 ? '#fff' : '#c77dff'; ctx.fillRect(52, 112, 126 * clamp(S.strengthT / STRENGTH_TIME, 0, 1), 8);
+  }
 }
 
 let hudCache = '';

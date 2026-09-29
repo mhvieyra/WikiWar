@@ -20,6 +20,26 @@ export const CROUCH_SPEED_MULT = .5;       // velocidad horizontal agachado
 
 export const SPR_SCALE = 2;                // los sprites se dibujan x2 (pixel art)
 
+// Cajas de suministros y items
+export const CRATE_EVERY = 60;             // s entre cajas
+export const CRATE_FALL = 90;              // px/s de caida con paracaidas
+export const CRATE_HP = 3;
+export const CRATE_LIFE = 30;              // s hasta que desaparece si no se rompe
+export const CRATE_W = 52, CRATE_H = 50;   // hitbox (el arte de crate.png ocupa 26x25 px de fuente)
+export const CRATE_ROOF = 50;              // px sobre la base de la caja donde queda el techo (25 px de fuente x2)
+export const CRATE_NEAR = 300;             // la caja cae a +-CRATE_NEAR px (horizontal) del jugador
+export const ITEM_LIFE = 20;               // s hasta que un item sin recoger desaparece
+export const ITEM_BLINK = 3;               // s finales en que parpadea
+export const MEDKIT_HEAL = 50;
+export const STRENGTH_MULT = 1.5;
+export const STRENGTH_TIME = 15;           // s
+export const DROP_AMMO = .55, DROP_STRENGTH = .37;   // el resto (8%) es botiquin
+
+// Jetpack (coordenadas en px de pantalla, relativas a los pies del jugador)
+export const JETPACK_BACK = 8;             // cuanto se corre hacia atras del centro del cuerpo
+export const SMOKE_EVERY = .06;            // s entre bocanadas de humo
+export const SMOKE_LIFE = .5;              // s que dura cada bocanada
+
 export const REMOVE = 'style,script,link,meta,.mw-editsection,sup,.reference,.reflist,.references,.mw-references-wrap,.navbox,.vertical-navbox,.metadata,.hatnote,.noprint,.ambox,.mw-empty-elt,.sistersitebox,#toc,.toc,.catlinks,.authority-control,.portal,.shortdescription,.side-box,.mw-cite-backlink,.error,.mbox-small,audio,video,.mw-tmh-player,.gallery,.mw-authority-control';
 
 export const STOP = new Set(['references', 'notes', 'external_links', 'referencias', 'notas', 'enlaces_externos', 'bibliografía', 'bibliography', 'further_reading', 'notes_and_references', 'notas_y_referencias', 'referencias_y_notas']);

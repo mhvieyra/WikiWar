@@ -6,6 +6,7 @@ import { okSpr, drawSpr, drawStick, drawGun, SHOULDER_STAND_Y, CHEST_Y } from '.
 import { physics } from './physics.js';
 import { hueRotate } from './utils.js';
 import { burst, hurt } from './main.js';
+import { lootAmmo } from './weapons.js';
 
 // Color base por tipo (antes de aplicarle el hue random de cada instancia).
 const BASE_COL = { grunt: '#c0392b', gunner: '#8e2bb0', pistolero: '#2b7cb0' };
@@ -105,10 +106,12 @@ export function updateEnemy(e, dt) {
   if (p.inv <= 0 && Math.abs(e.x - p.x) < (e.w + p.w) / 2 && p.y > e.y - e.h && p.y - p.h < e.y) hurt(18, Math.sign(p.x - e.x || 1) * 320);
 }
 
-export function hitEnemy(e, d, dir) {
+// `wi` es el arma que causo el daño (-1 si no fue un disparo del jugador).
+export function hitEnemy(e, d, dir, wi) {
   e.hp -= d; e.flash = .1; e.vx += dir * 90;
   if (e.hp <= 0 && !e.dead) {
     e.dead = true; S.kills++;
+    if (wi === 0) lootAmmo();
     burst(e.x, e.y + CHEST_Y, 22, '#c0392b', 260, 120);
     state.fx.push({ type: 'die', x: e.x, y: e.y, t: 0, face: e.face, hue: e.hue });
     playSfx('enemy_die', 140, .18, 'sawtooth', .05, -80);

@@ -14,13 +14,14 @@ export const ctx = cv.getContext('2d');
 
 export const S = {
   mode: 'menu', lang: 'es', from: '', toCanon: '', toNorm2: '', toInfo: null, path: [],
-  clicks: 0, kills: 0, words: 0, time: 0, lives: 3, wi: 0, cool: 0, gcool: 0, shake: 0, spawnT: 1
+  clicks: 0, kills: 0, words: 0, time: 0, lives: 3, wi: 0, cool: 0, gcool: 0, shake: 0, spawnT: 1,
+  ammo: [], ammoFlash: 0, strengthT: 0, crateT: 60
 };
 
 export const state = {
   L: null,
   p: null,
-  enemies: [], bullets: [], grenades: [], parts: [], fx: [],
+  enemies: [], bullets: [], grenades: [], parts: [], fx: [], crates: [], items: [], smoke: [],
   cam: 0, mx: 0, my: 0, mouseDown: false, near: null,
   keys: {},
   W: 0, H: 0, DPR: 1
