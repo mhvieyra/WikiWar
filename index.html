@@ -14,7 +14,7 @@
   <div class="route"><span id="tFrom"></span><i>&gt;</i><b id="tTo"></b></div>
   <div class="stats">
     <span title="Saltos entre artículos"><small>SALTOS</small><b id="nClicks">0</b></span>
-    <span><small>TIEMPO</small><b id="nTime">0:00</b></span>
+    <span id="sTime"><small>TIEMPO</small><b id="nTime">0:00</b></span>
     <span><small>BAJAS</small><b id="nKills">0</b></span>
     <span><small>PALABRAS</small><b id="nWords">0</b></span>
   </div>
@@ -45,6 +45,9 @@
     <div class="arrow">&gt;</div>
     <div class="field"><label for="inTo">Destino</label><input id="inTo" placeholder="Argentina" autocomplete="off"></div>
   </div>
+  <div class="field"><label for="mode">Modo</label>
+    <select id="mode"><option value="ranked">Clasificatoria (con tiempo, suma Elo)</option><option value="untimed">Sin tiempo (relajado, sin Elo)</option></select></div>
+  <div id="eloBox" class="elo"></div>
   <div class="row"><button id="bPlay" class="primary">Jugar</button><button id="bRand" class="ghost">Aleatorio</button></div>
   <div id="status"></div>
   <details class="controls"><summary>Controles</summary>

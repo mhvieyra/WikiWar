@@ -25,6 +25,21 @@ pública de Wikipedia y se usa bajo su licencia correspondiente.
 | M | Silenciar/activar sonido |
 | H | Mostrar/ocultar la ayuda de controles (se oculta sola a los 9 s) |
 
+## Modos y Elo
+
+- **Clasificatoria** (por defecto): cronómetro visible y la partida suma o
+  resta Elo.
+- **Sin tiempo**: sin cronómetro y sin efecto sobre el Elo, para jugar
+  relajado.
+
+El Elo arranca en 1000 y se guarda en el navegador (`localStorage`). Cada
+clasificatoria se juega contra una ruta de rating fijo (1200). Una derrota
+vale 0; una victoria vale entre 0.5 y 1 según rapidez, saltos y vidas que
+sobran. Abandonar una clasificatoria desde la pausa cuenta como derrota. K
+es 40 en las primeras 10 partidas y 24 después. Rangos: Bronce, Plata
+(900), Oro (1100), Platino (1300), Diamante (1500), Maestro (1700) y
+Leyenda (1900). Todo está en `src/elo.js`.
+
 ## Cajas de suministros
 
 Cada 60 segundos cae una caja con paracaídas cerca del jugador (dura 30 s si
@@ -56,6 +71,7 @@ eso el juego sigue siendo DOM + Canvas 2D puro, no un motor tipo Phaser.
 - `src/state.js` — estado global mutable compartido entre módulos (jugador, nivel, cámara, input) y el canvas.
 - `src/utils.js` — helpers chicos sin estado ($, clamp, norm, fmtTime, etc).
 - `src/wiki.js` — llamadas a la API de Wikipedia, armado del DOM del artículo y medición del nivel.
+- `src/elo.js` — sistema Elo local y rangos.
 - `src/physics.js` — gravedad y colisión contra plataformas/piso.
 - `src/player.js` — spawn, disparo, granada y dibujo del jugador.
 - `src/crates.js` — cajas con paracaídas, ítems (botiquín, fuerza, munición) y su dibujo.

@@ -9,6 +9,7 @@ import { $, clamp, esc, fmtTime, norm } from './utils.js';
 import { WEAPONS, magsLeft } from './weapons.js';
 import { SPRITES, okSpr, drawHeart } from './sprites.js';
 import { resetRun, startGame } from './main.js';
+import { loadElo, rankOf, recordGame } from './elo.js';
 
 export function fade(on) { $('#fade').style.opacity = on ? 1 : 0; }
 
@@ -29,32 +30,52 @@ export function showMsg(title, body, btns, kind = 'pause', eyebrow = '') {
 }
 export function hideMsg() { $('#msg').style.display = 'none'; }
 
-export function toMenu() { S.mode = 'menu'; $('#menu').style.display = 'flex'; document.body.classList.remove('play'); $('#status').textContent = ''; }
+// Cierra la partida clasificatoria (una sola vez) y devuelve el bloque HTML del Elo.
+export function settle(won) {
+  if (S.untimed || S.settled) return '';
+  S.settled = true;
+  const r = recordGame(won, S);
+  return eloHtml(r);
+}
+function eloHtml(r) {
+  const sign = r.delta > 0 ? '+' : '';
+  return '<div class="eloRes ' + (r.delta >= 0 ? 'up' : 'down') + '"><b>ELO ' + r.after + '</b><span>' + sign + r.delta + '</span><small>' + r.rank + (r.promoted ? ' · ¡SUBISTE DE RANGO!' : '') + '</small></div>';
+}
+// Abandonar una clasificatoria en curso cuenta como derrota.
+function leave(fn) { return () => { if (S.mode === 'pause' && !S.untimed && !S.settled) { const r = recordGame(false, S); S.settled = true; toast('Abandonaste: ELO ' + r.after + ' (' + r.delta + ')'); } fn(); }; }
+export function renderElo() {
+  const d = loadElo();
+  $('#eloBox').innerHTML = $('#mode').value === 'untimed'
+    ? '<small>Sin cronómetro. Esta partida no modifica tu Elo.</small>'
+    : '<b>ELO ' + d.rating + '</b><span>' + rankOf(d.rating) + '</span><small>' + d.wins + '/' + d.games + ' victorias · récord ' + d.peak + '</small>';
+}
+
+export function toMenu() { renderElo(); S.mode = 'menu'; $('#menu').style.display = 'flex'; document.body.classList.remove('play'); $('#status').textContent = ''; }
 
 export function stats() {
   const tile = (v, l) => '<div class="tile"><b>' + v + '</b><small>' + l + '</small></div>';
-  return '<div class="tiles">' + tile(S.clicks, 'Saltos') + tile(fmtTime(S.time), 'Tiempo') + tile(S.kills, 'Bajas') + tile(S.words, 'Palabras') + '</div>' +
+  return '<div class="tiles' + (S.untimed ? ' t3' : '') + '">' + tile(S.clicks, 'Saltos') + (S.untimed ? '' : tile(fmtTime(S.time), 'Tiempo')) + tile(S.kills, 'Bajas') + tile(S.words, 'Palabras') + '</div>' +
     '<div class="path"><span class="lbl">Ruta</span>' + S.path.map(p => '<span class="chip">' + esc(p) + '</span>').join('<i>&gt;</i>') + '</div>';
 }
 
 export function win(title) {
   S.mode = 'win';
-  showMsg('Llegaste a «' + title + '»', stats(), [['Jugar otra vez', () => resetRun(), false], ['Menú', toMenu, true]], 'win', 'VICTORIA');
+  showMsg('Llegaste a «' + title + '»', stats() + settle(true), [['Jugar otra vez', () => resetRun(), false], ['Menú', toMenu, true]], 'win', 'VICTORIA');
 }
 
 export function gameOver() {
   S.mode = 'over';
-  showMsg('Te quedaste sin vidas', '<p class="lead">No llegaste a <b>«' + esc(S.toCanon) + '»</b>.</p>' + stats(),
+  showMsg('Te quedaste sin vidas', '<p class="lead">No llegaste a <b>«' + esc(S.toCanon) + '»</b>.</p>' + stats() + settle(false),
     [['Reintentar', () => resetRun(), false], ['Menú', toMenu, true]], 'over', 'GAME OVER');
 }
 
 export function pause() {
   if (S.mode !== 'play') return;
   S.mode = 'pause';
-  showMsg('En pausa', '<p class="lead">Destino: <b>«' + esc(S.toCanon) + '»</b> · Vidas: <b>' + S.lives + '</b></p>' + stats(), [
+  showMsg('En pausa', '<p class="lead">Destino: <b>«' + esc(S.toCanon) + '»</b> · Vidas: <b>' + S.lives + '</b>' + (S.untimed ? '' : '<br>Si abandonás, cuenta como derrota.') + '</p>' + stats(), [
     ['Reanudar', () => { S.mode = 'play'; }, false],
-    ['Reiniciar', () => resetRun(), true],
-    ['Menú', toMenu, true]], 'pause', 'PAUSA');
+    ['Reiniciar', leave(() => resetRun()), true],
+    ['Menú', leave(toMenu), true]], 'pause', 'PAUSA');
 }
 
 export function setGoal() {
@@ -127,9 +148,9 @@ export function drawHud() {
 
 let hudCache = '';
 export function updateHud() {
-  const s = S.clicks + '|' + fmtTime(S.time) + '|' + S.kills + '|' + S.words;
+  const s = S.untimed + '|' + S.clicks + '|' + fmtTime(S.time) + '|' + S.kills + '|' + S.words;
   if (s === hudCache) return; hudCache = s;
-  $('#nClicks').textContent = S.clicks; $('#nTime').textContent = fmtTime(S.time); $('#nKills').textContent = S.kills; $('#nWords').textContent = S.words;
+  $('#nClicks').textContent = S.clicks; $('#sTime').style.display = S.untimed ? 'none' : ''; $('#nTime').textContent = fmtTime(S.time); $('#nKills').textContent = S.kills; $('#nWords').textContent = S.words;
 }
 
 export function initUI() {
@@ -137,6 +158,7 @@ export function initUI() {
   $('#bPlay').onclick = e => { e.target.blur(); startGame(); };
   $('#bRand').onclick = e => { e.target.blur(); randomPair(); };
   $('#lang').onchange = randomPair;
+  $('#mode').onchange = renderElo; renderElo();
   ['#inFrom', '#inTo'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); }));
   randomPair();
 }
