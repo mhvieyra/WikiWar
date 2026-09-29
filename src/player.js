@@ -42,14 +42,14 @@ function spinPoint(p, x, y) {
   return { x: px + dx * c - dy * s, y: py + dx * s + dy * c };
 }
 
-// La mochila se dibuja siempre ANTES que el cuerpo (detras del torso); la
-// llama, si esta volando, sale de la tobera y tambien queda detras.
+// La mochila solo se dibuja mientras vuela, ANTES que el cuerpo (detras del
+// torso); la llama sale de la tobera y tambien queda detras.
 function drawJetpack(p) {
-  if (!okSpr('jetpack')) return;
+  if (!p.flying || !okSpr('jetpack')) return;
   const { cx, cy, nx, ny } = jetpackPose(p);
   ctx.save();
   if (p.spin) { ctx.translate(p.x, p.y - 20); ctx.rotate(p.spin * p.face); ctx.translate(-p.x, -(p.y - 20)); }
-  if (p.flying && okSpr('jetFlame')) drawSpr('jetFlame', p.t, nx, ny, false, 0, .5, 0);
+  if (okSpr('jetFlame')) drawSpr('jetFlame', p.t, nx, ny, false, 0, .5, 0);
   drawSpr('jetpack', 0, cx, cy, p.face < 0, 0, .5, .5);
   ctx.restore();
 }
