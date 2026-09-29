@@ -112,7 +112,7 @@ export function buildLevel() {
     if (a) { if (!byAnchor.has(a)) byAnchor.set(a, []); byAnchor.get(a).push(pl); }
   });
   document.querySelectorAll('#content img').forEach(el => {
-    plats.push({ el, kind: 'img', x: 0, y: 0, w: 0, h: 0, hp: 6, maxhp: 6, alive: true, link: null, a: null, deadAt: 0 });
+    plats.push({ el, kind: 'img', x: 0, y: 0, w: 0, h: 0, hp: 20, maxhp: 20, alive: true, link: null, a: null, deadAt: 0 });
   });
   const t1 = S.toNorm2, t2 = norm(S.toCanon);
   const targetPlats = plats.filter(pl => pl.link && (norm(pl.link) === t2 || norm(pl.link) === t1));
