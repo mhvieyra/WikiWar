@@ -13,15 +13,16 @@ import { resetRun, startGame } from './main.js';
 export function fade(on) { $('#fade').style.opacity = on ? 1 : 0; }
 
 export function toast(t) {
-  const el = $('#toast'); el.textContent = t; el.style.opacity = 1;
-  clearTimeout(toast.t); toast.t = setTimeout(() => { el.style.opacity = 0; }, 1800);
+  const el = $('#toast'); el.textContent = t; el.classList.add('on');
+  clearTimeout(toast.t); toast.t = setTimeout(() => { el.classList.remove('on'); }, 1800);
 }
 
-export function showMsg(title, body, btns) {
-  $('#mT').textContent = title; $('#mB').innerHTML = body;
+export function showMsg(title, body, btns, kind = 'pause', eyebrow = '') {
+  $('#mK').textContent = eyebrow; $('#mT').textContent = title; $('#mB').innerHTML = body;
+  $('#msg').className = kind;
   const b = $('#mBtns'); b.innerHTML = '';
   btns.forEach(([label, fn, alt]) => {
-    const el = document.createElement('button'); el.textContent = label; if (alt) el.className = 'alt';
+    const el = document.createElement('button'); el.textContent = label; el.className = alt ? 'ghost' : 'primary';
     el.onclick = () => { el.blur(); hideMsg(); fn(); }; b.appendChild(el);
   });
   $('#msg').style.display = 'flex';
@@ -31,26 +32,29 @@ export function hideMsg() { $('#msg').style.display = 'none'; }
 export function toMenu() { S.mode = 'menu'; $('#menu').style.display = 'flex'; document.body.classList.remove('play'); $('#status').textContent = ''; }
 
 export function stats() {
-  return 'Saltos: <b>' + S.clicks + '</b><br>Tiempo: <b>' + fmtTime(S.time) + '</b><br>Bajas: <b>' + S.kills + '</b><br>Palabras destruidas: <b>' + S.words + '</b><br><br>Ruta: ' + S.path.map(esc).join(' → ');
+  const tile = (v, l) => '<div class="tile"><b>' + v + '</b><small>' + l + '</small></div>';
+  return '<div class="tiles">' + tile(S.clicks, 'Saltos') + tile(fmtTime(S.time), 'Tiempo') + tile(S.kills, 'Bajas') + tile(S.words, 'Palabras') + '</div>' +
+    '<div class="path"><span class="lbl">Ruta</span>' + S.path.map(p => '<span class="chip">' + esc(p) + '</span>').join('<i>→</i>') + '</div>';
 }
 
 export function win(title) {
   S.mode = 'win';
-  showMsg('¡LLEGASTE A «' + title.toUpperCase() + '»!', stats(), [['JUGAR OTRA VEZ', () => resetRun(), false], ['MENÚ', toMenu, true]]);
+  showMsg('Llegaste a «' + title + '»', stats(), [['Jugar otra vez', () => resetRun(), false], ['Menú', toMenu, true]], 'win', 'VICTORIA');
 }
 
 export function gameOver() {
   S.mode = 'over';
-  showMsg('GAME OVER', 'Te quedaste sin vidas antes de llegar a «' + esc(S.toCanon) + '».<br><br>' + stats(), [['REINTENTAR', () => resetRun(), false], ['MENÚ', toMenu, true]]);
+  showMsg('Te quedaste sin vidas', '<p class="lead">No llegaste a <b>«' + esc(S.toCanon) + '»</b>.</p>' + stats(),
+    [['Reintentar', () => resetRun(), false], ['Menú', toMenu, true]], 'over', 'GAME OVER');
 }
 
 export function pause() {
   if (S.mode !== 'play') return;
   S.mode = 'pause';
-  showMsg('PAUSA', 'Destino: <b>' + esc(S.toCanon) + '</b><br>Vidas: <b>' + S.lives + '</b>', [
-    ['REANUDAR', () => { S.mode = 'play'; }, false],
-    ['REINICIAR', () => resetRun(), true],
-    ['MENÚ', toMenu, true]]);
+  showMsg('En pausa', '<p class="lead">Destino: <b>«' + esc(S.toCanon) + '»</b> · Vidas: <b>' + S.lives + '</b></p>' + stats(), [
+    ['Reanudar', () => { S.mode = 'play'; }, false],
+    ['Reiniciar', () => resetRun(), true],
+    ['Menú', toMenu, true]], 'pause', 'PAUSA');
 }
 
 export function setGoal() {
@@ -58,7 +62,16 @@ export function setGoal() {
   $('#gTitle').textContent = S.toCanon;
   const ex = (S.toInfo.extract || '').replace(/\s+/g, ' ');
   $('#gText').textContent = ex.length > 150 ? ex.slice(0, 147) + '…' : ex;
+  showHelp(9000);
   const im = $('#gImg'); if (S.toInfo.thumb) { im.src = S.toInfo.thumb; im.style.display = 'block'; } else im.style.display = 'none';
+}
+
+export function showHelp(ms) {
+  const el = $('#help'); el.classList.remove('off');
+  clearTimeout(showHelp.t); if (ms) showHelp.t = setTimeout(() => el.classList.add('off'), ms);
+}
+export function toggleHelp() {
+  const el = $('#help'); clearTimeout(showHelp.t); el.classList.toggle('off');
 }
 
 export function randomPair() {
@@ -68,30 +81,42 @@ export function randomPair() {
   $('#inFrom').value = a; $('#inTo').value = b;
 }
 
+const HUD_FONT = '600 11px ui-monospace,Menlo,Consolas,monospace';
+function panel(x, y, w, h) {
+  ctx.fillStyle = 'rgba(18,19,22,.88)'; ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(x + .5, y + .5, w, h, 12); ctx.fill(); ctx.stroke();
+}
+function bar(x, y, w, h, frac, col) {
+  ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.beginPath(); ctx.roundRect(x, y, w, h, h / 2); ctx.fill();
+  if (frac <= 0) return;
+  ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x, y, Math.max(h, w * frac), h, h / 2); ctx.fill();
+}
+
 export function drawHud() {
-  const p = state.p;
-  ctx.font = 'bold 12px "Courier New",monospace'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#272727'; ctx.fillRect(10, 10, 178, 74); ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(10, 10, 178, 74);
-  for (let i = 0; i < 3; i++) { if (i < S.lives) drawHeart(20 + i * 30, 17, 3); else { ctx.globalAlpha = .25; drawHeart(20 + i * 30, 17, 3); ctx.globalAlpha = 1; } }
-  ctx.fillStyle = '#fff'; ctx.fillText('VIDA', 20, 47);
-  ctx.fillStyle = '#111'; ctx.fillRect(62, 41, 116, 10); ctx.fillStyle = p.hp > 35 ? '#4ade80' : '#e63946'; ctx.fillRect(62, 41, 116 * clamp(p.hp / 100, 0, 1), 10);
-  ctx.fillStyle = '#fff'; ctx.fillText('FUEL', 20, 62);
-  ctx.fillStyle = '#111'; ctx.fillRect(62, 57, 116, 10); ctx.fillStyle = '#ff7a3d'; ctx.fillRect(62, 57, 116 * clamp(p.fuel / 100, 0, 1), 10);
-  ctx.fillStyle = '#ffd166'; ctx.fillText('[' + (S.wi + 1) + '] ' + WEAPONS[S.wi].name, 20, 77);
-  // reserva de balas del arma actual (la pistola es infinita)
+  const p = state.p, X = 10, Y = 10, W = 196;
+  ctx.font = HUD_FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  panel(X, Y, W, 96);
+  for (let i = 0; i < 3; i++) { if (i < S.lives) drawHeart(X + 12 + i * 30, Y + 8, 3); else { ctx.globalAlpha = .22; drawHeart(X + 12 + i * 30, Y + 8, 3); ctx.globalAlpha = 1; } }
+  ctx.fillStyle = '#9da0a8'; ctx.fillText('VIDA', X + 12, Y + 46);
+  bar(X + 56, Y + 41, W - 68, 9, clamp(p.hp / 100, 0, 1), p.hp > 35 ? '#4ade80' : '#ef4444');
+  ctx.fillStyle = '#9da0a8'; ctx.fillText('FUEL', X + 12, Y + 63);
+  bar(X + 56, Y + 58, W - 68, 9, clamp(p.fuel / 100, 0, 1), '#ff7a3d');
+  // arma actual y reserva de balas (la pistola es infinita)
+  ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(X + 12, Y + 73, W - 24, 1);
+  ctx.fillStyle = '#ffd166'; ctx.fillText('[' + (S.wi + 1) + '] ' + WEAPONS[S.wi].name, X + 12, Y + 84);
   const ammo = S.ammo[S.wi], lim = WEAPONS[S.wi].ammo;
   ctx.textAlign = 'right';
-  ctx.fillStyle = S.ammoFlash > 0 && Math.floor(S.ammoFlash * 10) % 2 ? '#fff' : !lim ? '#ffd166' : ammo <= 0 ? '#e63946' : ammo <= lim.max * .2 ? '#ff7a3d' : '#ffd166';
-  ctx.fillText(lim ? magsLeft(S.wi) + '/3 · ' + ammo : '∞', 178, 77);
+  ctx.fillStyle = S.ammoFlash > 0 && Math.floor(S.ammoFlash * 10) % 2 ? '#fff' : !lim ? '#ffd166' : ammo <= 0 ? '#ef4444' : ammo <= lim.max * .2 ? '#ff7a3d' : '#ffd166';
+  ctx.fillText(lim ? magsLeft(S.wi) + '/3 · ' + ammo : '∞', X + W - 12, Y + 84);
   ctx.textAlign = 'left';
-  // indicador de la pocion de fuerza (solo mientras esta activa)
+  // pocion de fuerza (solo mientras esta activa)
   if (S.strengthT > 0) {
-    ctx.fillStyle = '#272727'; ctx.fillRect(10, 90, 178, 38); ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(10, 90, 178, 38);
-    if (okSpr('itemStrength')) { const d = SPRITES.itemStrength; ctx.drawImage(d.img, 0, 0, d.fw, d.fh, 14, 93, d.fw * SPR_SCALE, d.fh * SPR_SCALE); }
-    ctx.fillStyle = '#c77dff'; ctx.fillText('FUERZA x' + STRENGTH_MULT, 52, 103);
-    ctx.textAlign = 'right'; ctx.fillText(Math.ceil(S.strengthT) + 's', 178, 103); ctx.textAlign = 'left';
-    ctx.fillStyle = '#111'; ctx.fillRect(52, 112, 126, 8);
-    ctx.fillStyle = S.strengthT < 3 && Math.floor(S.strengthT * 6) % 2 ? '#fff' : '#c77dff'; ctx.fillRect(52, 112, 126 * clamp(S.strengthT / STRENGTH_TIME, 0, 1), 8);
+    const sy = Y + 104;
+    panel(X, sy, W, 42);
+    if (okSpr('itemStrength')) { const d = SPRITES.itemStrength; ctx.drawImage(d.img, 0, 0, d.fw, d.fh, X + 8, sy + 5, d.fw * SPR_SCALE, d.fh * SPR_SCALE); }
+    ctx.fillStyle = '#c77dff'; ctx.fillText('FUERZA x' + STRENGTH_MULT, X + 46, sy + 14);
+    ctx.textAlign = 'right'; ctx.fillText(Math.ceil(S.strengthT) + 's', X + W - 12, sy + 14); ctx.textAlign = 'left';
+    bar(X + 46, sy + 26, W - 58, 8, clamp(S.strengthT / STRENGTH_TIME, 0, 1), S.strengthT < 3 && Math.floor(S.strengthT * 6) % 2 ? '#fff' : '#c77dff');
   }
 }
 

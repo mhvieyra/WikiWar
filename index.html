@@ -10,27 +10,53 @@
 <div id="page"><div id="content"></div></div>
 <canvas id="c"></canvas>
 
-<div id="top"><span id="tFrom"></span><em>&rarr;</em><b id="tTo"></b><span class="sep">|</span>Saltos <b id="nClicks">0</b><span class="sep">|</span><b id="nTime">0:00</b><span class="sep">|</span>Bajas <b id="nKills">0</b><span class="sep">|</span>Palabras <b id="nWords">0</b></div>
-<div id="goal"><img id="gImg" alt=""><div><small>DESTINO</small><b id="gTitle"></b><p id="gText"></p></div></div>
-<div id="help">A D mover &middot; Espacio saltar (mantené para volar) &middot; S bajar &middot; Click disparar &middot; Click derecho granada &middot; 1-3 armas &middot; E o C/Shift parado sobre un link para entrar &middot; Esc pausa &middot; M sonido</div>
+<div id="top">
+  <div class="route"><span id="tFrom"></span><i>&rarr;</i><b id="tTo"></b></div>
+  <div class="stats">
+    <span title="Saltos entre artículos"><small>SALTOS</small><b id="nClicks">0</b></span>
+    <span><small>TIEMPO</small><b id="nTime">0:00</b></span>
+    <span><small>BAJAS</small><b id="nKills">0</b></span>
+    <span><small>PALABRAS</small><b id="nWords">0</b></span>
+  </div>
+</div>
+<div id="goal"><img id="gImg" alt=""><div class="gt"><small>DESTINO</small><b id="gTitle"></b><p id="gText"></p></div></div>
+<div id="help">
+  <span><kbd>A</kbd><kbd>D</kbd>mover</span>
+  <span><kbd>Espacio</kbd>saltar / volar (mantené)</span>
+  <span><kbd>S</kbd>bajar</span>
+  <span><kbd>Click</kbd>disparar</span>
+  <span><kbd>Click der.</kbd>granada</span>
+  <span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd>armas</span>
+  <span><kbd>E</kbd>entrar a un link</span>
+  <span><kbd>Esc</kbd>pausa</span>
+  <span><kbd>M</kbd>sonido</span>
+  <span><kbd>H</kbd>ocultar ayuda</span>
+</div>
 <div id="toast"></div>
 <div id="fade"></div>
 
-<div id="menu"><div class="card">
-  <h1>WIKI<span>WAR</span></h1>
-  <p>Llegá de un artículo de Wikipedia a otro. Todo el texto se puede romper, los links son portales y hay stickmans que quieren matarte. Tenés 3 vidas.</p>
-  <label>IDIOMA</label>
-  <select id="lang"><option value="es">Español</option><option value="en">English</option></select>
-  <label>ARTÍCULO DE ORIGEN</label>
-  <input id="inFrom" placeholder="Pizza" autocomplete="off">
-  <label>ARTÍCULO DE DESTINO</label>
-  <input id="inTo" placeholder="Argentina" autocomplete="off">
-  <div class="row"><button id="bPlay">JUGAR</button><button id="bRand" class="alt">ALEATORIO</button></div>
+<div id="menu"><div class="card menu">
+  <div class="logo">WIKI<span>WAR</span></div>
+  <p class="tag">Llegá de un artículo de Wikipedia a otro. Cada palabra se puede romper, los links son portales y hay stickmans que quieren matarte. Tenés 3 vidas.</p>
+  <div class="field"><label for="lang">Idioma</label>
+    <select id="lang"><option value="es">Español</option><option value="en">English</option></select></div>
+  <div class="pair">
+    <div class="field"><label for="inFrom">Origen</label><input id="inFrom" placeholder="Pizza" autocomplete="off"></div>
+    <div class="arrow">&rarr;</div>
+    <div class="field"><label for="inTo">Destino</label><input id="inTo" placeholder="Argentina" autocomplete="off"></div>
+  </div>
+  <div class="row"><button id="bPlay" class="primary">Jugar</button><button id="bRand" class="ghost">Aleatorio</button></div>
   <div id="status"></div>
+  <details class="controls"><summary>Controles</summary>
+    <div><kbd>A</kbd><kbd>D</kbd> mover</div><div><kbd>Espacio</kbd> saltar, mantené para volar</div>
+    <div><kbd>Click</kbd> disparar</div><div><kbd>Click der.</kbd> granada</div>
+    <div><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> armas</div><div><kbd>E</kbd> entrar a un link</div>
+    <div><kbd>S</kbd> bajar</div><div><kbd>Esc</kbd> pausa</div>
+  </details>
   <p class="disclaimer">WikiWar es un proyecto independiente y sin fines de lucro, no afiliado a la Fundación Wikimedia. El contenido de los artículos viene de Wikipedia y se usa bajo su licencia correspondiente.</p>
 </div></div>
 
-<div id="msg"><div class="card"><h2 id="mT"></h2><div id="mB"></div><div id="mBtns"></div></div></div>
+<div id="msg"><div class="card modal"><div id="mK" class="eyebrow"></div><h2 id="mT"></h2><div id="mB"></div><div id="mBtns"></div></div></div>
 <div id="narrow">El juego no está disponible en pantallas chicas.<br>Probalo en una notebook o PC.</div>
 
 <script type="module" src="/src/main.js"></script>
