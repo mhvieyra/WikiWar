@@ -11,14 +11,17 @@ import { STRENGTH_MULT } from './config.js';
 // un enemigo con la pistola; sin `ammo` el arma es infinita).
 export const WEAPONS = [
   { name: 'PISTOLA', rate: .28, dmg: 1, speed: 1300, spread: .02, pellets: 1, pierce: 2, kick: 20, snd: [520, .06], ammo: null },
-  { name: 'SMG', rate: .075, dmg: .7, speed: 1500, spread: .08, pellets: 1, pierce: 1, kick: 10, snd: [380, .04], ammo: { start: 90, max: 150, kill: 10 } },
-  { name: 'ESCOPETA', rate: .75, dmg: 1, speed: 1200, spread: .22, pellets: 7, pierce: 1, kick: 150, snd: [160, .12], ammo: { start: 16, max: 28, kill: 2 } }
+  { name: 'SMG', rate: .075, dmg: .7, speed: 1500, spread: .08, pellets: 1, pierce: 1, kick: 10, snd: [380, .04], mag: 30, ammo: { start: 90, max: 90, kill: 10 } },
+  { name: 'ESCOPETA', rate: .75, dmg: 1, speed: 1200, spread: .22, pellets: 7, pierce: 1, kick: 150, snd: [160, .12], mag: 6, ammo: { start: 18, max: 18, kill: 2 } }
 ];
 
 // Reservas de balas: S.ammo[i] es la cantidad de la arma i (Infinity = infinita).
 export function resetAmmo() {
   S.ammo = WEAPONS.map(w => (w.ammo ? w.ammo.start : Infinity));
 }
+// Cargadores que quedan de 3 (mag = balas por cargador; el que esta en uso
+// cuenta aunque este a medias).
+export function magsLeft(i) { const w = WEAPONS[i]; return w.mag ? Math.ceil(S.ammo[i] / w.mag) : Infinity; }
 export function hasAmmo(i) { return S.ammo[i] > 0; }
 export function addAmmo(i, n) {
   const a = WEAPONS[i].ammo; if (!a) return;

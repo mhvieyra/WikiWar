@@ -35,6 +35,26 @@ export function boom(vol) {
   } catch (e) {}
 }
 
+// Jetpack: un ruido grave y continuo (ruido blanco filtrado) que se enciende
+// y apaga con un fundido corto. Volumen bajo a proposito.
+let jet = null;
+export function jetSound(on) {
+  if (muted && !jet) return;
+  try {
+    const c = getCtx();
+    if (!jet) {
+      if (!on) return;
+      const len = c.sampleRate, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const src = c.createBufferSource(), lp = c.createBiquadFilter(), g = c.createGain();
+      src.buffer = buf; src.loop = true; lp.type = 'lowpass'; lp.frequency.value = 500; g.gain.value = 0;
+      src.connect(lp); lp.connect(g); g.connect(c.destination); src.start();
+      jet = { g };
+    }
+    jet.g.gain.setTargetAtTime(on && !muted ? .05 : 0, c.currentTime, .06);
+  } catch (e) {}
+}
+
 // registro de archivos de audio: se intenta cargar una vez por clave y se
 // recuerda si existe o no. Mientras no haya archivos en public/sounds/,
 // SFX[key].ok queda en false para siempre y playSfx cae al beep.
