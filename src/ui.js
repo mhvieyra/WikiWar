@@ -6,7 +6,7 @@
 import { PAIRS, SPR_SCALE, STRENGTH_MULT, STRENGTH_TIME } from './config.js';
 import { S, state, ctx } from './state.js';
 import { $, clamp, esc, fmtTime, norm } from './utils.js';
-import { WEAPONS } from './weapons.js';
+import { WEAPONS, magsLeft } from './weapons.js';
 import { SPRITES, okSpr, drawHeart } from './sprites.js';
 import { resetRun, startGame } from './main.js';
 
@@ -82,7 +82,7 @@ export function drawHud() {
   const ammo = S.ammo[S.wi], lim = WEAPONS[S.wi].ammo;
   ctx.textAlign = 'right';
   ctx.fillStyle = S.ammoFlash > 0 && Math.floor(S.ammoFlash * 10) % 2 ? '#fff' : !lim ? '#ffd166' : ammo <= 0 ? '#e63946' : ammo <= lim.max * .2 ? '#ff7a3d' : '#ffd166';
-  ctx.fillText(lim ? ammo + '/' + lim.max : '∞', 178, 77);
+  ctx.fillText(lim ? magsLeft(S.wi) + '/3 · ' + ammo : '∞', 178, 77);
   ctx.textAlign = 'left';
   // indicador de la pocion de fuerza (solo mientras esta activa)
   if (S.strengthT > 0) {
