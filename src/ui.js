@@ -34,7 +34,7 @@ export function toMenu() { S.mode = 'menu'; $('#menu').style.display = 'flex'; d
 export function stats() {
   const tile = (v, l) => '<div class="tile"><b>' + v + '</b><small>' + l + '</small></div>';
   return '<div class="tiles">' + tile(S.clicks, 'Saltos') + tile(fmtTime(S.time), 'Tiempo') + tile(S.kills, 'Bajas') + tile(S.words, 'Palabras') + '</div>' +
-    '<div class="path"><span class="lbl">Ruta</span>' + S.path.map(p => '<span class="chip">' + esc(p) + '</span>').join('<i>→</i>') + '</div>';
+    '<div class="path"><span class="lbl">Ruta</span>' + S.path.map(p => '<span class="chip">' + esc(p) + '</span>').join('<i>&gt;</i>') + '</div>';
 }
 
 export function win(title) {
@@ -81,42 +81,47 @@ export function randomPair() {
   $('#inFrom').value = a; $('#inTo').value = b;
 }
 
-const HUD_FONT = '600 11px ui-monospace,Menlo,Consolas,monospace';
-function panel(x, y, w, h) {
-  ctx.fillStyle = 'rgba(18,19,22,.88)'; ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.roundRect(x + .5, y + .5, w, h, 12); ctx.fill(); ctx.stroke();
+export const PF = '"Press Start 2P",monospace', VT = '"VT323",monospace';
+// caja pixel art: contorno negro de 4px con esquinas cortadas + luz arriba / sombra abajo
+export function pxBox(x, y, w, h, fill = '#1b1b1f') {
+  ctx.fillStyle = '#000'; ctx.fillRect(x, y - 4, w, h + 8); ctx.fillRect(x - 4, y, w + 8, h);
+  ctx.fillStyle = fill; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = 'rgba(255,255,255,.09)'; ctx.fillRect(x, y, w, 3);
+  ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(x, y + h - 3, w, 3);
 }
+// barra segmentada (bloques de 6px con 2px de separacion)
 function bar(x, y, w, h, frac, col) {
-  ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.beginPath(); ctx.roundRect(x, y, w, h, h / 2); ctx.fill();
-  if (frac <= 0) return;
-  ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x, y, Math.max(h, w * frac), h, h / 2); ctx.fill();
+  const n = Math.floor((w + 2) / 8);
+  const on = Math.ceil(clamp(frac, 0, 1) * n - 1e-6);
+  for (let i = 0; i < n; i++) { ctx.fillStyle = i < on ? col : '#0c0c0e'; ctx.fillRect(x + i * 8, y, 6, h); }
 }
 
 export function drawHud() {
-  const p = state.p, X = 10, Y = 10, W = 196;
-  ctx.font = HUD_FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-  panel(X, Y, W, 96);
-  for (let i = 0; i < 3; i++) { if (i < S.lives) drawHeart(X + 12 + i * 30, Y + 8, 3); else { ctx.globalAlpha = .22; drawHeart(X + 12 + i * 30, Y + 8, 3); ctx.globalAlpha = 1; } }
-  ctx.fillStyle = '#9da0a8'; ctx.fillText('VIDA', X + 12, Y + 46);
-  bar(X + 56, Y + 41, W - 68, 9, clamp(p.hp / 100, 0, 1), p.hp > 35 ? '#4ade80' : '#ef4444');
-  ctx.fillStyle = '#9da0a8'; ctx.fillText('FUEL', X + 12, Y + 63);
-  bar(X + 56, Y + 58, W - 68, 9, clamp(p.fuel / 100, 0, 1), '#ff7a3d');
+  const p = state.p, X = 18, Y = 18, W = 208, H = 104;
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  pxBox(X, Y, W, H);
+  for (let i = 0; i < 3; i++) { if (i < S.lives) drawHeart(X + 14 + i * 32, Y + 10, 3); else { ctx.globalAlpha = .2; drawHeart(X + 14 + i * 32, Y + 10, 3); ctx.globalAlpha = 1; } }
+  ctx.font = '8px ' + PF;
+  ctx.fillStyle = '#a09fa8'; ctx.fillText('VIDA', X + 14, Y + 51);
+  bar(X + 62, Y + 45, W - 78, 12, p.hp / 100, p.hp > 35 ? '#4ade80' : '#e63946');
+  ctx.fillStyle = '#a09fa8'; ctx.fillText('FUEL', X + 14, Y + 71);
+  bar(X + 62, Y + 65, W - 78, 12, p.fuel / 100, '#ff7a3d');
   // arma actual y reserva de balas (la pistola es infinita)
-  ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(X + 12, Y + 73, W - 24, 1);
-  ctx.fillStyle = '#ffd166'; ctx.fillText('[' + (S.wi + 1) + '] ' + WEAPONS[S.wi].name, X + 12, Y + 84);
+  ctx.fillStyle = '#34343c'; ctx.fillRect(X + 14, Y + 82, W - 28, 2);
+  ctx.fillStyle = '#ffd166'; ctx.font = '8px ' + PF; ctx.fillText('[' + (S.wi + 1) + '] ' + WEAPONS[S.wi].name, X + 14, Y + 93);
   const ammo = S.ammo[S.wi], lim = WEAPONS[S.wi].ammo;
-  ctx.textAlign = 'right';
-  ctx.fillStyle = S.ammoFlash > 0 && Math.floor(S.ammoFlash * 10) % 2 ? '#fff' : !lim ? '#ffd166' : ammo <= 0 ? '#ef4444' : ammo <= lim.max * .2 ? '#ff7a3d' : '#ffd166';
-  ctx.fillText(lim ? magsLeft(S.wi) + '/3 · ' + ammo : '∞', X + W - 12, Y + 84);
+  ctx.textAlign = 'right'; ctx.font = '18px ' + VT;
+  ctx.fillStyle = S.ammoFlash > 0 && Math.floor(S.ammoFlash * 10) % 2 ? '#fff' : !lim ? '#ffd166' : ammo <= 0 ? '#e63946' : ammo <= lim.max * .2 ? '#ff7a3d' : '#ffd166';
+  ctx.fillText(lim ? magsLeft(S.wi) + '/3 · ' + ammo : '∞', X + W - 14, Y + 92);
   ctx.textAlign = 'left';
   // pocion de fuerza (solo mientras esta activa)
   if (S.strengthT > 0) {
-    const sy = Y + 104;
-    panel(X, sy, W, 42);
-    if (okSpr('itemStrength')) { const d = SPRITES.itemStrength; ctx.drawImage(d.img, 0, 0, d.fw, d.fh, X + 8, sy + 5, d.fw * SPR_SCALE, d.fh * SPR_SCALE); }
-    ctx.fillStyle = '#c77dff'; ctx.fillText('FUERZA x' + STRENGTH_MULT, X + 46, sy + 14);
-    ctx.textAlign = 'right'; ctx.fillText(Math.ceil(S.strengthT) + 's', X + W - 12, sy + 14); ctx.textAlign = 'left';
-    bar(X + 46, sy + 26, W - 58, 8, clamp(S.strengthT / STRENGTH_TIME, 0, 1), S.strengthT < 3 && Math.floor(S.strengthT * 6) % 2 ? '#fff' : '#c77dff');
+    const sy = Y + H + 16;
+    pxBox(X, sy, W, 48);
+    if (okSpr('itemStrength')) { const d = SPRITES.itemStrength; ctx.drawImage(d.img, 0, 0, d.fw, d.fh, X + 10, sy + 8, d.fw * SPR_SCALE, d.fh * SPR_SCALE); }
+    ctx.fillStyle = '#c77dff'; ctx.font = '8px ' + PF; ctx.fillText('FUERZA x' + STRENGTH_MULT, X + 50, sy + 15);
+    ctx.textAlign = 'right'; ctx.font = '18px ' + VT; ctx.fillText(Math.ceil(S.strengthT) + 's', X + W - 14, sy + 14); ctx.textAlign = 'left';
+    bar(X + 50, sy + 28, W - 66, 10, S.strengthT / STRENGTH_TIME, S.strengthT < 3 && Math.floor(S.strengthT * 6) % 2 ? '#fff' : '#c77dff');
   }
 }
 
@@ -128,6 +133,7 @@ export function updateHud() {
 }
 
 export function initUI() {
+  if (document.fonts) { document.fonts.load('8px "Press Start 2P"'); document.fonts.load('18px VT323'); }
   $('#bPlay').onclick = e => { e.target.blur(); startGame(); };
   $('#bRand').onclick = e => { e.target.blur(); randomPair(); };
   $('#lang').onchange = randomPair;

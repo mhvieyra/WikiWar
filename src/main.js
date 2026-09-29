@@ -1,6 +1,8 @@
 // Bucle principal y flujo de partida: carga un articulo de Wikipedia como
 // nivel, corre el update/draw de cada frame, y conecta el input del
 // teclado y el mouse con el resto de los modulos.
+import '@fontsource/press-start-2p';
+import '@fontsource/vt323';
 import './style.css';
 import { RS, REGEN, CRATE_EVERY, CRATE_H, RUN, JUMP, FLY_ACC, FLY_MAX, FUEL_DRAIN, FUEL_REGEN, STAND_H, CROUCH_H, CROUCH_SPEED_MULT } from './config.js';
 import { S, state, cv, ctx } from './state.js';
@@ -13,7 +15,7 @@ import { physics, canStandUp } from './physics.js';
 import { WEAPONS, resetAmmo } from './weapons.js';
 import { playSfx, boom, toggleMuted, jetSound } from './audio.js';
 import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
-import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI, toggleHelp } from './ui.js';
+import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI, toggleHelp, pxBox, PF, VT } from './ui.js';
 
 /* ------------------------------------------------------------------ canvas */
 function resize() {
@@ -300,14 +302,13 @@ function draw() {
   if (state.near) {
     const near = state.near;
     const isT = norm(near.link) === norm(S.toCanon) || norm(near.link) === S.toNorm2;
-    const txt = (isT ? '¡Llegar a «' : 'Entrar a «') + near.link + '»';
-    ctx.font = '600 12px system-ui,sans-serif';
-    const kw = 20, w = ctx.measureText(txt).width + 22 + kw, bx = Math.round(clamp(p.x - w / 2, 6, state.W - w - 6)), by = Math.round(p.y - 74);
-    ctx.fillStyle = 'rgba(18,19,22,.92)'; ctx.strokeStyle = isT ? '#ffd166' : 'rgba(255,255,255,.18)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(bx + .5, by + .5, w, 26, 13); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#ff7a3d'; ctx.beginPath(); ctx.roundRect(bx + 5, by + 5, kw, 17, 5); ctx.fill();
-    ctx.fillStyle = '#1a0d05'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('E', bx + 5 + kw / 2, by + 14);
-    ctx.textAlign = 'left'; ctx.fillStyle = isT ? '#ffd166' : '#fff'; ctx.fillText(txt, bx + kw + 12, by + 14);
+    const txt = (isT ? '¡LLEGAR A «' : 'ENTRAR A «') + near.link + '»';
+    ctx.font = '18px ' + VT; ctx.textBaseline = 'middle';
+    const kw = 22, w = Math.round(ctx.measureText(txt).width) + kw + 26, bx = Math.round(clamp(p.x - w / 2, 8, state.W - w - 8)), by = Math.round(p.y - 78);
+    pxBox(bx, by, w, 28, isT ? '#3a2f10' : '#1b1b1f');
+    ctx.fillStyle = '#ff7a3d'; ctx.fillRect(bx + 6, by + 6, kw, 16);
+    ctx.fillStyle = '#000'; ctx.font = '8px ' + PF; ctx.textAlign = 'center'; ctx.fillText('E', bx + 6 + kw / 2, by + 15);
+    ctx.font = '18px ' + VT; ctx.textAlign = 'left'; ctx.fillStyle = isT ? '#ffd166' : '#f4f1e8'; ctx.fillText(txt, bx + kw + 14, by + 15);
   }
   ctx.restore();
   drawHud();
