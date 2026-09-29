@@ -24,6 +24,17 @@ pública de Wikipedia y se usa bajo su licencia correspondiente.
 | Esc | Pausa |
 | M | Silenciar/activar sonido |
 
+## Cajas de suministros
+
+Cada 60 segundos cae una caja con paracaídas cerca del jugador (dura 30 s si
+no se rompe). Se rompe a tiros o con granadas (3 de vida) y suelta un ítem
+que desaparece a los 20 s: munición (55%), poción de fuerza (37%, daño x1.5
+por 15 s) o botiquín (8%, +50 de vida).
+
+La pistola tiene balas infinitas; la SMG y la escopeta tienen reserva
+limitada (se ve en el HUD). Matar un enemigo con la pistola te da algo de
+munición de ambas. Los valores están en `src/weapons.js` y `src/config.js`.
+
 Agachado la hitbox se achica, caminás a la mitad de velocidad y no podés
 saltar ni volar; al soltar la tecla solo te parás si hay espacio libre
 arriba.
@@ -46,6 +57,7 @@ eso el juego sigue siendo DOM + Canvas 2D puro, no un motor tipo Phaser.
 - `src/wiki.js` — llamadas a la API de Wikipedia, armado del DOM del artículo y medición del nivel.
 - `src/physics.js` — gravedad y colisión contra plataformas/piso.
 - `src/player.js` — spawn, disparo, granada y dibujo del jugador.
+- `src/crates.js` — cajas con paracaídas, ítems (botiquín, fuerza, munición) y su dibujo.
 - `src/enemies.js` — aparición, IA y dibujo de los enemigos.
 - `src/weapons.js` — tabla de armas (agregar una es agregar una entrada).
 - `src/audio.js` — sonido: hoy son beeps sintetizados, preparado para cargar `.mp3`/`.ogg` desde `public/sounds/` con el beep como fallback si falta el archivo.

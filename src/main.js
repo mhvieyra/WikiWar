@@ -2,14 +2,15 @@
 // nivel, corre el update/draw de cada frame, y conecta el input del
 // teclado y el mouse con el resto de los modulos.
 import './style.css';
-import { RS, REGEN, RUN, JUMP, FLY_ACC, FLY_MAX, FUEL_DRAIN, FUEL_REGEN, STAND_H, CROUCH_H, CROUCH_SPEED_MULT } from './config.js';
+import { RS, REGEN, CRATE_EVERY, CRATE_H, RUN, JUMP, FLY_ACC, FLY_MAX, FUEL_DRAIN, FUEL_REGEN, STAND_H, CROUCH_H, CROUCH_SPEED_MULT } from './config.js';
 import { S, state, cv, ctx } from './state.js';
 import { $, clamp, norm, sleep, nextFrame } from './utils.js';
 import { fetchParse, fetchInfo, buildDOM, buildLevel, measure } from './wiki.js';
-import { spawnPlayer, fire, throwGrenade, drawPlayer } from './player.js';
+import { spawnPlayer, fire, throwGrenade, drawPlayer, updateJetSmoke, drawSmoke } from './player.js';
+import { updateCrates, updateItems, drawCrates, drawItems, hitCrate } from './crates.js';
 import { spawnEnemy, updateEnemy, drawEnemy, hitEnemy } from './enemies.js';
 import { physics, canStandUp } from './physics.js';
-import { WEAPONS } from './weapons.js';
+import { WEAPONS, resetAmmo } from './weapons.js';
 import { playSfx, boom, toggleMuted } from './audio.js';
 import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
 import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI } from './ui.js';
@@ -45,6 +46,7 @@ export async function loadLevel(title, first) {
   measure();
   setTimeout(measure, 900);
   state.enemies = []; state.bullets = []; state.grenades = []; state.parts = []; state.fx = [];
+  state.crates = []; state.items = []; state.smoke = [];
   spawnPlayer(); state.cam = 0; state.near = null; S.spawnT = 1.5;
   $('#tFrom').textContent = data.title;
   S.mode = 'play'; fade(false);
@@ -52,6 +54,7 @@ export async function loadLevel(title, first) {
 
 export function resetRun() {
   S.clicks = 0; S.kills = 0; S.words = 0; S.time = 0; S.lives = 3; S.path = [];
+  resetAmmo(); S.strengthT = 0; S.ammoFlash = 0; S.crateT = CRATE_EVERY;
   loadLevel(S.from, true);
 }
 
@@ -104,7 +107,7 @@ function loseLife() {
   state.enemies = []; state.bullets = []; state.grenades = [];
   spawnPlayer(); state.p.inv = keepInv; state.cam = 0;
 }
-function explode(x, y) {
+function explode(x, y, mult) {
   const R = 95, p = state.p;
   state.fx.push({ type: 'boom', x, y, t: 0 }); S.shake = 14; boom(.3);
   burst(x, y, 30, '#ff7a3d', 360, 100);
@@ -114,7 +117,8 @@ function explode(x, y) {
     if (Math.abs(cx - x) > R + pl.w / 2 || Math.abs(cy - y) > R) continue;
     if (Math.hypot(cx - x, cy - y) < R) { if (pl.kind === 'img') hitPlat(pl, 3); else destroyPlat(pl); }
   }
-  for (const e of state.enemies) if (!e.dead && Math.hypot(e.x - x, e.y - 20 - y) < R * 1.1) hitEnemy(e, 4, Math.sign(e.x - x));
+  for (const e of state.enemies) if (!e.dead && Math.hypot(e.x - x, e.y - 20 - y) < R * 1.1) hitEnemy(e, 4 * mult, Math.sign(e.x - x), -1);
+  for (const c of state.crates) if (Math.hypot(c.x - x, c.y - CRATE_H / 2 - y) < R * 1.1) hitCrate(c, 2 * mult);
   const d = Math.hypot(p.x - x, p.y - 20 - y);
   if (d < R) { const k = 1 - d / R; hurt(Math.round(10 + 25 * k), Math.sign(p.x - x || 1) * 320 * k); }
 }
@@ -155,7 +159,7 @@ function update(dt) {
   p.flying = false;
   if (!p.onGround && hold && p.holdT > .2 && p.fuel > 0) {
     p.vy = Math.max(p.vy - FLY_ACC * dt, -FLY_MAX); p.fuel -= FUEL_DRAIN * dt; p.flying = true;
-    if (Math.random() < .7) state.parts.push({ x: p.x + (Math.random() - .5) * 6, y: p.y, vx: (Math.random() - .5) * 40, vy: 120 + Math.random() * 100, life: .35, c: Math.random() < .5 ? '#ff7a3d' : '#ffd166', s: 3 });
+    if (!okSpr('jetFlame') && Math.random() < .7) state.parts.push({ x: p.x + (Math.random() - .5) * 6, y: p.y, vx: (Math.random() - .5) * 40, vy: 120 + Math.random() * 100, life: .35, c: Math.random() < .5 ? '#ff7a3d' : '#ffd166', s: 3 });
   }
   if (p.onGround) { p.fuel = Math.min(100, p.fuel + FUEL_REGEN * dt); p.usedFlip = false; }
   if ((keys.KeyS || keys.ArrowDown) && p.onGround) p.drop = .22;
@@ -166,6 +170,7 @@ function update(dt) {
   p.aim = Math.atan2(wy - (p.y + shoulderY), state.mx - p.x); p.face = Math.cos(p.aim) >= 0 ? 1 : -1;
   if (state.mouseDown && S.cool <= 0) fire();
   physics(p, dt);
+  updateJetSmoke(dt);
 
   // camara
   const tgt = clamp(p.y - state.H * .6, 0, Math.max(0, L.h - state.H));
@@ -176,13 +181,15 @@ function update(dt) {
   for (const e of state.enemies) if (!e.dead) updateEnemy(e, dt);
   state.enemies = state.enemies.filter(e => !e.dead);
   updBullets(dt);
+  updateCrates(dt); updateItems(dt);
+  S.strengthT = Math.max(0, S.strengthT - dt); S.ammoFlash = Math.max(0, S.ammoFlash - dt);
   for (const g of state.grenades) {
     g.t += dt; const vy0 = g.vy; physics(g, dt);
     if (g.onGround && vy0 > 150) { g.vy = -vy0 * .4; g.onGround = false; }
     g.vx *= g.onGround ? .9 : .995;
     if (g.t > 1.3) g.boom = true;
     else for (const e of state.enemies) if (Math.abs(e.x - g.x) < 12 && g.y > e.y - e.h - 4 && g.y < e.y + 4) g.boom = true;
-    if (g.boom) explode(g.x, g.y - 3);
+    if (g.boom) explode(g.x, g.y - 3, g.mult);
   }
   state.grenades = state.grenades.filter(g => !g.boom);
 
@@ -209,7 +216,11 @@ function updBullets(dt) {
       b.x += sx; b.y += sy;
       if (b.own === 'p') {
         for (const e of state.enemies) {
-          if (!e.dead && b.x > e.x - e.w / 2 - 2 && b.x < e.x + e.w / 2 + 2 && b.y > e.y - e.h && b.y < e.y) { hitEnemy(e, b.dmg, Math.sign(b.vx)); b.dead = true; break; }
+          if (!e.dead && b.x > e.x - e.w / 2 - 2 && b.x < e.x + e.w / 2 + 2 && b.y > e.y - e.h && b.y < e.y) { hitEnemy(e, b.dmg, Math.sign(b.vx), b.wi); b.dead = true; break; }
+        }
+        if (b.dead) break;
+        for (const c of state.crates) {
+          if (c.breakT < 0 && b.x > c.x - c.w / 2 && b.x < c.x + c.w / 2 && b.y > c.y - c.h && b.y < c.y) { hitCrate(c, b.dmg); b.dead = true; break; }
         }
         if (b.dead) break;
         const arr = L.full.get(Math.floor(b.y / RS));
@@ -257,7 +268,9 @@ function draw() {
     for (const pl of L.byAnchor.get(state.near.a) || [state.near]) { ctx.fillRect(pl.x, pl.y, pl.w, pl.h); ctx.strokeRect(pl.x, pl.y, pl.w, pl.h); }
   }
 
+  drawCrates(); drawItems();
   for (const e of state.enemies) if (e.y > vt && e.y < vb + 100) drawEnemy(e);
+  drawSmoke();
   drawPlayer();
 
   // balas

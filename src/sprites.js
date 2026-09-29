@@ -24,7 +24,16 @@ export const SPRITES = {
   bullet: { src: '/sprites/bullet.png', fw: 8, fh: 8, fps: 1 },
   grenade: { src: '/sprites/grenade.png', fw: 8, fh: 8, fps: 1 },
   explosion: { src: '/sprites/explosion.png', fw: 64, fh: 64, fps: 20 },
-  heart: { src: '/sprites/heart.png', fw: 8, fh: 8, fps: 1 }
+  heart: { src: '/sprites/heart.png', fw: 8, fh: 8, fps: 1 },
+  crate: { src: '/sprites/crate.png', fw: 32, fh: 32, fps: 1 },
+  crateBreak: { src: '/sprites/crate_break.png', fw: 32, fh: 32, fps: 14 },
+  parachute: { src: '/sprites/parachute.png', fw: 32, fh: 32, fps: 3 },
+  itemMedkit: { src: '/sprites/item_medkit.png', fw: 16, fh: 16, fps: 4 },
+  itemStrength: { src: '/sprites/item_strength.png', fw: 16, fh: 16, fps: 4 },
+  itemAmmo: { src: '/sprites/item_ammo.png', fw: 16, fh: 16, fps: 4 },
+  jetpack: { src: '/sprites/jetpack.png', fw: 16, fh: 16, fps: 1 },
+  jetFlame: { src: '/sprites/jet_flame.png', fw: 16, fh: 24, fps: 16 },
+  jetSmoke: { src: '/sprites/jet_smoke.png', fw: 16, fh: 16, fps: 12 }
 };
 for (const k in SPRITES) {
   const d = SPRITES[k]; d.ok = false; d.img = new Image();

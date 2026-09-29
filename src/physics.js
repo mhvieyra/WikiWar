@@ -8,7 +8,7 @@ import { clamp } from './utils.js';
 export function physics(e, dt) {
   e.x = clamp(e.x + e.vx * dt, e.w / 2, state.W - e.w / 2);
   const pb = e.y;
-  e.vy = Math.min(e.vy + G * dt, 1400);
+  e.vy = Math.min(e.vy + (e.g === undefined ? G : e.g) * dt, 1400);
   e.y += e.vy * dt;
   e.onGround = false;
   if (e.vy >= 0 && !(e.drop > 0)) {
