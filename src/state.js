@@ -21,7 +21,7 @@ export const S = {
 export const state = {
   L: null,
   p: null,
-  enemies: [], bullets: [], grenades: [], parts: [], fx: [], crates: [], items: [], smoke: [],
+  enemies: [], bullets: [], grenades: [], parts: [], fx: [], crates: [], items: [], smoke: [], debris: [],
   cam: 0, mx: 0, my: 0, mouseDown: false, near: null,
   keys: {},
   W: 0, H: 0, DPR: 1

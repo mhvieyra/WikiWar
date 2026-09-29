@@ -13,6 +13,7 @@ import { updateCrates, updateItems, drawCrates, drawItems, hitCrate } from './cr
 import { spawnEnemy, updateEnemy, drawEnemy, hitEnemy } from './enemies.js';
 import { physics, canStandUp } from './physics.js';
 import { WEAPONS, resetAmmo } from './weapons.js';
+import { makeCrater, coveredBy, touches, inCrater, spawnDebris, updateDebris, drawDebris, drawTerrain } from './craters.js';
 import { playSfx, boom, toggleMuted, jetSound } from './audio.js';
 import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
 import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI, toggleHelp, pxBox, PF, VT, pickPair, toMenu } from './ui.js';
@@ -48,7 +49,7 @@ export async function loadLevel(title, first) {
   measure();
   setTimeout(measure, 900);
   state.enemies = []; state.bullets = []; state.grenades = []; state.parts = []; state.fx = [];
-  state.crates = []; state.items = []; state.smoke = [];
+  state.crates = []; state.items = []; state.smoke = []; state.debris = [];
   spawnPlayer(); state.cam = 0; state.near = null; S.spawnT = 1.5;
   $('#tFrom').textContent = data.title;
   S.mode = 'play'; fade(false);
@@ -119,11 +120,17 @@ export function burst(x, y, n, col, spd, up) {
     state.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - (up || 60), life: .5 + Math.random() * .5, c: col, s: 2 + Math.random() * 3 });
   }
 }
-function destroyPlat(pl) {
+// permanent: la rompio un crater, asi que no reaparece. blast: [x, y, fuerza]
+// de la explosion, para que el escombro salga despedido hacia afuera.
+function destroyPlat(pl, permanent, blast) {
   const L = state.L;
   if (!pl.alive || pl.link) return;
-  pl.alive = false; pl.deadAt = performance.now(); pl.el.style.visibility = 'hidden'; L.destroyed.push(pl);
-  if (pl.kind === 'word') { S.words++; burst(pl.x + pl.w / 2, pl.y + pl.h / 2, 4, '#202122', 140, 40); }
+  pl.alive = false; pl.deadAt = performance.now(); pl.el.style.visibility = 'hidden';
+  if (!permanent) L.destroyed.push(pl);
+  if (pl.kind === 'word') {
+    S.words++; burst(pl.x + pl.w / 2, pl.y + pl.h / 2, 4, '#202122', 140, 40);
+    spawnDebris(pl, blast ? blast[0] : pl.x + pl.w / 2, blast ? blast[1] : pl.y + pl.h, blast ? blast[2] : 0);
+  }
   else burst(pl.x + pl.w / 2, pl.y + pl.h / 2, 26, '#8a8f98', 260, 80);
 }
 function hitPlat(pl, d) {
@@ -150,11 +157,14 @@ function explode(x, y, mult) {
   const R = 95, p = state.p;
   state.fx.push({ type: 'boom', x, y, t: 0 }); S.shake = 14; boom(.3);
   burst(x, y, 30, '#ff7a3d', 360, 100);
-  for (const pl of state.L.plats) {
-    if (!pl.alive || pl.link) continue;
+  const L = state.L, cs = makeCrater(x, y, R * 1.15), blast = [x, y, 420];
+  for (const pl of L.plats) {
+    if (pl.link) { if (touches(cs, pl) && !L.covered.includes(pl)) L.covered.push(pl); continue; }
+    if (!pl.alive) continue;
     const cx = pl.x + pl.w / 2, cy = pl.y + pl.h / 2;
-    if (Math.abs(cx - x) > R + pl.w / 2 || Math.abs(cy - y) > R) continue;
-    if (Math.hypot(cx - x, cy - y) < R) { if (pl.kind === 'img') hitPlat(pl, 3); else destroyPlat(pl); }
+    if (Math.abs(cx - x) > R + pl.w / 2 || Math.abs(cy - y) > R + pl.h) continue;
+    if (coveredBy(cs, cx, cy)) destroyPlat(pl, true, blast);
+    else if (pl.kind === 'img' && Math.hypot(cx - x, cy - y) < R) hitPlat(pl, 3);
   }
   for (const e of state.enemies) if (!e.dead && Math.hypot(e.x - x, e.y - 20 - y) < R * 1.1) hitEnemy(e, 4 * mult, Math.sign(e.x - x), -1);
   for (const c of state.crates) if (Math.hypot(c.x - x, c.y - CRATE_H / 2 - y) < R * 1.1) hitCrate(c, 2 * mult);
@@ -238,6 +248,7 @@ function update(dt) {
   // particulas y fx
   for (const q of state.parts) { q.vy += 900 * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.life -= dt; }
   state.parts = state.parts.filter(q => q.life > 0);
+  updateDebris(dt);
   for (const f of state.fx) f.t += dt;
   state.fx = state.fx.filter(f => f.t < (f.type === 'die' ? .45 : 1));
   S.shake = Math.max(0, S.shake - 30 * dt);
@@ -245,7 +256,9 @@ function update(dt) {
   // las palabras rotas reaparecen
   const now = performance.now();
   while (L.destroyed.length && now - L.destroyed[0].deadAt > REGEN) {
-    const pl = L.destroyed.shift(); pl.alive = true; pl.hp = pl.maxhp; pl.el.style.visibility = 'visible';
+    const pl = L.destroyed.shift();
+    if (inCrater(pl.x + pl.w / 2, pl.y + pl.h / 2)) continue;
+    pl.alive = true; pl.hp = pl.maxhp; pl.el.style.visibility = 'visible';
   }
   updateHud();
 }
@@ -267,7 +280,7 @@ function updBullets(dt) {
         if (b.dead) break;
         const arr = L.full.get(Math.floor(b.y / RS));
         if (arr) for (const pl of arr) {
-          if (!pl.alive || b.x < pl.x || b.x > pl.x + pl.w || b.y < pl.y || b.y > pl.y + pl.h) continue;
+          if (!pl.alive || (!pl.link && inCrater(b.x, b.y)) || b.x < pl.x || b.x > pl.x + pl.w || b.y < pl.y || b.y > pl.y + pl.h) continue;
           if (pl.link) { burst(b.x, b.y, 3, '#0645ad', 120, 20); b.dead = true; }
           else { hitPlat(pl, 1); if (--b.pierce <= 0) b.dead = true; }
           break;
@@ -296,8 +309,7 @@ function draw() {
   const vt = state.cam - 60, vb = state.cam + state.H + 60, now = performance.now();
 
   // suelo
-  ctx.fillStyle = '#272727'; ctx.fillRect(0, L.floorY, state.W, Math.max(200, L.h - L.floorY + 400));
-  ctx.fillStyle = '#ff7a3d'; ctx.fillRect(0, L.floorY, state.W, 4);
+  drawTerrain(vt, vb);
 
   // link resaltado y destino
   const pulse = .5 + .5 * Math.sin(now / 180);
@@ -315,6 +327,7 @@ function draw() {
   for (const e of state.enemies) if (e.y > vt && e.y < vb + 100) drawEnemy(e);
   drawSmoke();
   drawPlayer();
+  drawDebris();
 
   // balas
   for (const b of state.bullets) {
