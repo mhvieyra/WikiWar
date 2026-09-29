@@ -23,6 +23,7 @@ pública de Wikipedia y se usa bajo su licencia correspondiente.
 | E | Entrar al link donde estás parado |
 | Esc | Pausa |
 | M | Silenciar/activar sonido |
+| H | Mostrar/ocultar la ayuda de controles (se oculta sola a los 9 s) |
 
 ## Cajas de suministros
 

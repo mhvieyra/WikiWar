@@ -13,7 +13,7 @@ import { physics, canStandUp } from './physics.js';
 import { WEAPONS, resetAmmo } from './weapons.js';
 import { playSfx, boom, toggleMuted, jetSound } from './audio.js';
 import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
-import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI } from './ui.js';
+import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI, toggleHelp } from './ui.js';
 
 /* ------------------------------------------------------------------ canvas */
 function resize() {
@@ -300,11 +300,14 @@ function draw() {
   if (state.near) {
     const near = state.near;
     const isT = norm(near.link) === norm(S.toCanon) || norm(near.link) === S.toNorm2;
-    const txt = (isT ? 'E/C · ¡LLEGAR A «' : 'E/C · entrar a «') + near.link + '»';
-    ctx.font = 'bold 12px "Courier New",monospace';
-    const w = ctx.measureText(txt).width + 16, bx = Math.round(clamp(p.x - w / 2, 6, state.W - w - 6)), by = Math.round(p.y - 72);
-    ctx.fillStyle = '#272727'; ctx.fillRect(bx, by, w, 22); ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, w, 22);
-    ctx.fillStyle = isT ? '#ffd166' : '#fff'; ctx.textBaseline = 'middle'; ctx.fillText(txt, bx + 8, by + 12);
+    const txt = (isT ? '¡Llegar a «' : 'Entrar a «') + near.link + '»';
+    ctx.font = '600 12px system-ui,sans-serif';
+    const kw = 20, w = ctx.measureText(txt).width + 22 + kw, bx = Math.round(clamp(p.x - w / 2, 6, state.W - w - 6)), by = Math.round(p.y - 74);
+    ctx.fillStyle = 'rgba(18,19,22,.92)'; ctx.strokeStyle = isT ? '#ffd166' : 'rgba(255,255,255,.18)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(bx + .5, by + .5, w, 26, 13); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ff7a3d'; ctx.beginPath(); ctx.roundRect(bx + 5, by + 5, kw, 17, 5); ctx.fill();
+    ctx.fillStyle = '#1a0d05'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('E', bx + 5 + kw / 2, by + 14);
+    ctx.textAlign = 'left'; ctx.fillStyle = isT ? '#ffd166' : '#fff'; ctx.fillText(txt, bx + kw + 12, by + 14);
   }
   ctx.restore();
   drawHud();
@@ -318,6 +321,7 @@ addEventListener('keydown', e => {
   if (e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code) && S.mode !== 'menu') e.preventDefault();
   if (e.code === 'Escape') { if (S.mode === 'pause') { hideMsg(); S.mode = 'play'; } else pause(); return; }
+  if (e.code === 'KeyH') { toggleHelp(); return; }
   if (e.code === 'KeyM') { const m = toggleMuted(); toast(m ? 'Sonido apagado' : 'Sonido encendido'); return; }
   if (S.mode !== 'play') { keys[e.code] = true; return; }
   if (!e.repeat) {
