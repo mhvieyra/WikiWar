@@ -11,7 +11,7 @@ export function spawnPlayer() {
   const L = state.L;
   state.p = {
     x: L.spawn.x, y: L.spawn.y - 2, vx: 0, vy: 0, w: 16, h: 40, onGround: false, drop: 0, hp: 100, fuel: 100, inv: 2,
-    holdT: 0, spin: 0, flipping: false, flying: false, face: 1, aim: 0, t: 0, usedFlip: false
+    holdT: 0, spin: 0, flipping: false, flying: false, face: 1, aim: 0, t: 0, usedFlip: false, crouch: false
   };
 }
 
@@ -45,7 +45,7 @@ export function drawPlayer() {
     if (p.spin) { ctx.translate(p.x, p.y - 20); ctx.rotate(p.spin * p.face); ctx.translate(-p.x, -(p.y - 20)); }
     drawSpr(sn, p.t, p.x, p.y, p.face < 0, 0, .5, 1);
     ctx.restore();
-  } else drawStick(p.x, p.y, { face: p.face, col: '#111', t: p.t, moving, air, spin: p.spin });
+  } else drawStick(p.x, p.y, { face: p.face, col: '#111', t: p.t, moving, air, spin: p.spin, crouch: p.crouch });
   ctx.strokeStyle = '#111'; ctx.lineWidth = 3;
   if (!okSpr(sn || '')) { ctx.beginPath(); ctx.moveTo(p.x, p.y - 26); ctx.lineTo(p.x + Math.cos(p.aim) * 9, p.y - 26 + Math.sin(p.aim) * 9); ctx.stroke(); }
   drawGun(S.wi, p.x, p.y - 26, p.aim, '#111');

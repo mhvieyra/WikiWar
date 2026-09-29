@@ -45,20 +45,46 @@ export function drawSpr(name, t, cx, by, flip, ang, ax, ay, loop) {
 }
 
 // Placeholder vectorial de un stickman, usado para el jugador y los
-// enemigos cuando no hay sprite disponible.
+// enemigos cuando no hay sprite disponible. Soporta piernas con rodilla,
+// brazo con codo, cabeza rellena y una pose agachada (o.crouch).
 export function drawStick(x, y, o) {
   const c = ctx;
   c.save(); c.translate(Math.round(x), Math.round(y));
-  if (o.spin) { c.translate(0, -20); c.rotate(o.spin * o.face); c.translate(0, 20); }
-  c.strokeStyle = o.col; c.lineWidth = 3; c.lineCap = 'square';
-  const sw = o.moving && !o.air ? Math.sin(o.t * 16) * 9 : 0;
+  if (o.spin) { c.translate(0, -24); c.rotate(o.spin * o.face); c.translate(0, 24); }
+  c.strokeStyle = o.col; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
+  const crouch = !!o.crouch && !o.air;
+  const hipY = crouch ? -9 : -18;
+  const shY = crouch ? -19 : -26;
+  const headY = crouch ? -27 : -35;
+  const headR = 8;
+  const sw = o.moving && !o.air && !crouch ? Math.sin(o.t * 16) : 0;
+
   c.beginPath();
-  if (o.air) { c.moveTo(0, -16); c.lineTo(-6, -4); c.moveTo(0, -16); c.lineTo(7, -6); }
-  else { c.moveTo(0, -16); c.lineTo(sw, 0); c.moveTo(0, -16); c.lineTo(-sw, 0); }
-  c.moveTo(0, -16); c.lineTo(0, -28);
-  c.moveTo(0, -26); c.lineTo(-o.face * 6, -17 + (o.moving ? Math.sin(o.t * 16) * 3 : 0));
+  // piernas (con rodilla)
+  if (o.air) {
+    c.moveTo(0, hipY); c.lineTo(-6, hipY + 9); c.lineTo(-8, hipY + 18);
+    c.moveTo(0, hipY); c.lineTo(8, hipY + 7); c.lineTo(10, hipY + 16);
+  } else if (crouch) {
+    c.moveTo(0, hipY); c.lineTo(-10, hipY * .45); c.lineTo(-6, 0);
+    c.moveTo(0, hipY); c.lineTo(10, hipY * .45); c.lineTo(6, 0);
+  } else {
+    const kneeY = hipY * .5 - Math.abs(sw) * 3;
+    c.moveTo(0, hipY); c.lineTo(sw * 5, kneeY); c.lineTo(sw * 11, 0);
+    c.moveTo(0, hipY); c.lineTo(-sw * 5, kneeY); c.lineTo(-sw * 11, 0);
+  }
+  // torso
+  c.moveTo(0, hipY); c.lineTo(0, shY);
+  // brazo (con codo)
+  if (o.air) {
+    c.moveTo(0, shY + 2); c.lineTo(-o.face * 8, shY - 3); c.lineTo(-o.face * 11, shY - 11);
+  } else if (crouch) {
+    c.moveTo(0, shY + 2); c.lineTo(-o.face * 6, shY + 12); c.lineTo(-o.face * 3, hipY + 4);
+  } else {
+    const armSw = o.moving ? Math.sin(o.t * 16) * 4 : 0;
+    c.moveTo(0, shY + 2); c.lineTo(-o.face * 7, shY + 9 + armSw); c.lineTo(-o.face * 4, shY + 19 + armSw);
+  }
   c.stroke();
-  c.fillStyle = '#fff'; c.beginPath(); c.arc(0, -34, 6, 0, 6.283); c.fill(); c.stroke();
+  c.fillStyle = o.col; c.beginPath(); c.arc(0, headY, headR, 0, 6.283); c.fill();
   c.restore();
 }
 
