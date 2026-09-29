@@ -13,7 +13,7 @@ import { updateCrates, updateItems, drawCrates, drawItems, hitCrate } from './cr
 import { spawnEnemy, updateEnemy, drawEnemy, hitEnemy } from './enemies.js';
 import { physics, canStandUp } from './physics.js';
 import { WEAPONS, resetAmmo } from './weapons.js';
-import { makeCrater, holeTouches, inCrater, shedLetters, resetLetters, spawnShards, updateDebris, drawDebris, drawTerrain, drawDamage } from './craters.js';
+import { makeCrater, holeTouches, inCrater, shedLetters, shootLetter, letterGoneAt, resetLetters, spawnShards, updateDebris, drawDebris, drawTerrain, drawDamage } from './craters.js';
 import { playSfx, boom, toggleMuted, jetSound } from './audio.js';
 import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
 import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI, toggleHelp, pxBox, PF, VT, pickPair, toMenu } from './ui.js';
@@ -258,6 +258,11 @@ function update(dt) {
 
   // las palabras rotas reaparecen
   const now = performance.now();
+  L.shot = L.shot.filter(pl => {
+    if (!pl.alive) return false;
+    if (now - pl.shotAt <= REGEN) return true;
+    resetLetters(pl); return false;
+  });
   while (L.destroyed.length && now - L.destroyed[0].deadAt > REGEN) {
     const pl = L.destroyed.shift();
     if (inCrater(pl.x + pl.w / 2, pl.y + pl.h / 2)) continue;
@@ -286,6 +291,12 @@ function updBullets(dt) {
         if (arr) for (const pl of arr) {
           if (!pl.alive || (!pl.link && inCrater(b.x, b.y)) || b.x < pl.x || b.x > pl.x + pl.w || b.y < pl.y || b.y > pl.y + pl.h) continue;
           if (pl.link) { burst(b.x, b.y, 3, '#0645ad', 120, 20); b.dead = true; }
+          else if (pl.kind === 'word') {
+            if (letterGoneAt(pl, b.x)) continue;
+            burst(b.x, b.y, 3, '#8a8f98', 120, 30);
+            if (shootLetter(pl, b.x, b.y) === 0) destroyPlat(pl, false, [b.x, b.y, 240]);
+            if (--b.pierce <= 0) b.dead = true;
+          }
           else { hitPlat(pl, 1); if (--b.pierce <= 0) b.dead = true; }
           break;
         }

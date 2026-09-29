@@ -19,6 +19,7 @@ export function initCraters(L) {
   L.depth = new Float32Array(4096);
   L.covered = [];              // links que quedaron dentro de un crater (se redibujan encima)
   L.imgs = null;
+  L.shot = [];                 // palabras a las que les faltan letras disparadas
 }
 
 /* ------------------------------------------------------------------ grilla */
@@ -50,8 +51,10 @@ export function holeTouches(pl) {
 // Una plataforma-palabra no sostiene a nadie donde tiene un hueco debajo.
 // Los links son portales: nunca se hunden.
 export function holedAt(pl, x) {
-  if (pl.link || !state.L.hcount) return false;
-  return inCrater(clamp(x, pl.x, pl.x + pl.w), pl.y + 1);
+  if (pl.link) return false;
+  x = clamp(x, pl.x, pl.x + pl.w);
+  if (pl.shot && letterGoneAt(pl, x)) return true;
+  return state.L.hcount > 0 && inCrater(x, pl.y + 1);
 }
 
 export function floorAt(x) {
@@ -224,6 +227,44 @@ export function shedLetters(pl, blast, all) {
       if (!(all && inCrater(l.cx, l.cy))) spawnLetter(pl, l, blast);
     } else left++;
   }
+  if (!all && left) { pl.shot = true; syncLetters(pl); }
+  return left;
+}
+
+// Indice de la letra de la palabra que esta en la coordenada x.
+function letterIdx(pl, x) {
+  const arr = letters(pl);
+  let best = 0, bd = 1e9;
+  for (let i = 0; i < arr.length; i++) { const d = Math.abs(arr[i].cx - x); if (d < bd) { bd = d; best = i; } }
+  return best;
+}
+
+export function letterGoneAt(pl, x) {
+  const arr = letters(pl);
+  return arr.length > 0 && !!pl.gone[letterIdx(pl, x)];
+}
+
+// Oculta en el DOM las letras que ya no estan (cada letra va en su span).
+function syncLetters(pl) {
+  const txt = pl.el.textContent;
+  pl.el.textContent = '';
+  for (let i = 0; i < txt.length; i++) {
+    const s = document.createElement('span'); s.textContent = txt[i];
+    if (pl.gone[i]) s.style.visibility = 'hidden';
+    pl.el.appendChild(s);
+  }
+}
+
+// Un disparo se lleva solo la letra que golpea (y alguna vecina en la
+// escopeta si blast). Devuelve cuantas letras quedan en pie.
+export function shootLetter(pl, x, y) {
+  const arr = letters(pl), i = letterIdx(pl, x);
+  if (!arr.length || pl.gone[i]) return arr.filter((l, k) => !pl.gone[k]).length;
+  pl.gone[i] = true; pl.shot = true; pl.shotAt = performance.now();
+  if (!state.L.shot.includes(pl)) state.L.shot.push(pl);
+  spawnLetter(pl, arr[i], [x, y + 6, 240]);
+  let left = 0; for (let k = 0; k < arr.length; k++) if (!pl.gone[k]) left++;
+  if (left) syncLetters(pl);
   return left;
 }
 
@@ -232,6 +273,8 @@ export function resetLetters(pl) {
   pl.gone = null;
   const arr = letters(pl);
   pl.gone = arr.map(l => inCrater(l.cx, l.cy));
+  pl.shot = false;
+  if (pl.el.firstElementChild) syncLetters(pl);
 }
 
 function spawnLetter(pl, l, blast) {
