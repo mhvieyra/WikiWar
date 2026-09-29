@@ -2,7 +2,7 @@
 import { RS, JUMP } from './config.js';
 import { S, state, ctx } from './state.js';
 import { playSfx } from './audio.js';
-import { okSpr, drawSpr, drawStick, drawGun } from './sprites.js';
+import { okSpr, drawSpr, drawStick, drawGun, GUN_Y, CHEST_Y } from './sprites.js';
 import { physics } from './physics.js';
 import { burst, hurt } from './main.js';
 
@@ -24,7 +24,7 @@ export function spawnEnemy() {
         speed: 85 + Math.min(S.clicks, 8) * 6 + Math.random() * 25, face: 1, t: Math.random() * 5, onGround: false, drop: 0,
         jumpCd: Math.random(), cd: 1 + Math.random(), far: 0, flash: 0, dead: false
       });
-      burst(cx, pl.y - 20, 8, '#c0392b', 140, 60);
+      burst(cx, pl.y + CHEST_Y, 8, '#c0392b', 140, 60);
       return;
     }
   }
@@ -40,8 +40,8 @@ export function updateEnemy(e, dt) {
     e.cd -= dt;
     if (e.cd <= 0 && d < 640 && Math.abs(dy) < 280) {
       e.cd = 1.4 + Math.random() * .8;
-      const a = Math.atan2((p.y - 22) - (e.y - 26), dx) + (Math.random() - .5) * .18;
-      state.bullets.push({ x: e.x + Math.cos(a) * 16, y: e.y - 26 + Math.sin(a) * 16, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, life: 1.6, dmg: 12, pierce: 1, own: 'e' });
+      const a = Math.atan2((p.y + GUN_Y) - (e.y + GUN_Y), dx) + (Math.random() - .5) * .18;
+      state.bullets.push({ x: e.x + Math.cos(a) * 16, y: e.y + GUN_Y + Math.sin(a) * 16, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, life: 1.6, dmg: 12, pierce: 1, own: 'e' });
       playSfx('enemy_shoot', 240, .08, 'square', .025, -100);
     }
   } else e.vx = dir * e.speed;
@@ -62,7 +62,7 @@ export function hitEnemy(e, d, dir) {
   e.hp -= d; e.flash = .1; e.vx += dir * 90;
   if (e.hp <= 0 && !e.dead) {
     e.dead = true; S.kills++;
-    burst(e.x, e.y - 20, 22, '#c0392b', 260, 120);
+    burst(e.x, e.y + CHEST_Y, 22, '#c0392b', 260, 120);
     state.fx.push({ type: 'die', x: e.x, y: e.y, t: 0, face: e.face });
     playSfx('enemy_die', 140, .18, 'sawtooth', .05, -80);
   }
@@ -77,10 +77,10 @@ export function drawEnemy(e) {
   else {
     drawStick(e.x, e.y, { face: e.face, col: e.type === 'gunner' ? '#8e2bb0' : '#c0392b', t: e.t, moving, air });
     if (e.type === 'gunner') {
-      const a = Math.atan2((p.y - 22) - (e.y - 26), p.x - e.x);
-      ctx.strokeStyle = '#8e2bb0'; ctx.lineWidth = 6; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(e.x, e.y - 26); ctx.lineTo(e.x + Math.cos(a) * 9, e.y - 26 + Math.sin(a) * 9); ctx.stroke();
-      drawGun(0, e.x, e.y - 26, a, '#8e2bb0');
+      const a = Math.atan2((p.y + GUN_Y) - (e.y + GUN_Y), p.x - e.x);
+      ctx.strokeStyle = '#8e2bb0'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(e.x, e.y + GUN_Y); ctx.lineTo(e.x + Math.cos(a) * 16, e.y + GUN_Y + Math.sin(a) * 16); ctx.stroke();
+      drawGun(0, e.x, e.y + GUN_Y, a, '#8e2bb0');
     }
   }
   ctx.globalAlpha = 1;

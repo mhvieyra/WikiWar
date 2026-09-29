@@ -11,7 +11,7 @@ import { spawnEnemy, updateEnemy, drawEnemy, hitEnemy } from './enemies.js';
 import { physics } from './physics.js';
 import { WEAPONS } from './weapons.js';
 import { playSfx, boom, toggleMuted } from './audio.js';
-import { okSpr, drawSpr } from './sprites.js';
+import { okSpr, drawSpr, GUN_Y, CHEST_Y } from './sprites.js';
 import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI } from './ui.js';
 
 /* ------------------------------------------------------------------ canvas */
@@ -92,12 +92,12 @@ export function hurt(d, kx) {
   const p = state.p;
   if (p.inv > 0 || S.mode !== 'play') return;
   p.hp -= d; p.inv = .9; p.vx = kx; p.vy = -260; p.onGround = false; S.shake = 8;
-  burst(p.x, p.y - 22, 14, '#c0392b', 220, 100); playSfx('player_hurt', 110, .22, 'sawtooth', .07, -60);
+  burst(p.x, p.y + CHEST_Y, 14, '#c0392b', 220, 100); playSfx('player_hurt', 110, .22, 'sawtooth', .07, -60);
   if (p.hp <= 0) loseLife();
 }
 function loseLife() {
   const p = state.p;
-  S.lives--; burst(p.x, p.y - 20, 40, '#202122', 320, 160);
+  S.lives--; burst(p.x, p.y + CHEST_Y, 40, '#202122', 320, 160);
   if (S.lives <= 0) { gameOver(); return; }
   toast('Perdiste una vida. Te quedan ' + S.lives);
   const keepInv = 2.5;
@@ -141,7 +141,7 @@ function update(dt) {
   if (p.flipping) { p.spin += 13 * dt; if (p.spin >= 6.283) { p.spin = 0; p.flipping = false; } }
 
   const wy = state.my + state.cam;
-  p.aim = Math.atan2(wy - (p.y - 26), state.mx - p.x); p.face = Math.cos(p.aim) >= 0 ? 1 : -1;
+  p.aim = Math.atan2(wy - (p.y + GUN_Y), state.mx - p.x); p.face = Math.cos(p.aim) >= 0 ? 1 : -1;
   if (state.mouseDown && S.cool <= 0) fire();
   physics(p, dt);
 

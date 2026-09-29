@@ -44,6 +44,15 @@ export function drawSpr(name, t, cx, by, flip, ang, ax, ay, loop) {
   ctx.restore();
 }
 
+// Escala del placeholder vectorial: todas las medidas de drawStick estan
+// pensadas en una unidad "chica" y esta transformacion las agranda, asi que
+// GUN_Y (mas abajo) es el unico numero que hay que mantener sincronizado
+// con el hombro (shY) para que el arma no quede flotando lejos de la mano.
+export const STICK_SCALE = 2;
+const SHOULDER_LOCAL_Y = -29;
+export const GUN_Y = SHOULDER_LOCAL_Y * STICK_SCALE;
+export const CHEST_Y = (-16 + SHOULDER_LOCAL_Y) / 2 * STICK_SCALE;
+
 // Placeholder vectorial de un stickman, usado para el jugador y los
 // enemigos cuando no hay sprite disponible. Silueta rellena tipo capsula
 // (torso y miembros gruesos con puntas redondeadas), no lineas finas: el
@@ -52,11 +61,12 @@ export function drawSpr(name, t, cx, by, flip, ang, ax, ay, loop) {
 export function drawStick(x, y, o) {
   const c = ctx;
   c.save(); c.translate(Math.round(x), Math.round(y));
+  c.scale(STICK_SCALE, STICK_SCALE);
   if (o.spin) { c.translate(0, -22); c.rotate(o.spin * o.face); c.translate(0, 22); }
   c.strokeStyle = o.col; c.lineCap = 'round'; c.lineJoin = 'round';
   const crouch = !!o.crouch && !o.air;
   const hipY = crouch ? -8 : -16;
-  const shY = crouch ? -17 : -29;
+  const shY = crouch ? -17 : SHOULDER_LOCAL_Y;
   const headY = crouch ? -25 : -37;
   const headR = 9;
   const sw = o.moving && !o.air && !crouch ? Math.sin(o.t * 16) : 0;
@@ -106,11 +116,15 @@ export function drawGun(name, x, y, a, col) {
     const d = SPRITES[spriteName];
     ctx.drawImage(d.img, 0, 0, d.fw, d.fh, -d.fw * SPR_SCALE * .2, -d.fh * SPR_SCALE * .5, d.fw * SPR_SCALE, d.fh * SPR_SCALE);
   } else {
-    ctx.strokeStyle = col; ctx.lineWidth = 6; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(8, 0); ctx.stroke();
-    ctx.fillStyle = '#272727';
-    const len = name === 0 ? 13 : name === 1 ? 19 : 23;
-    ctx.beginPath(); ctx.roundRect(5, -4, len, 8, 3); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 12; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(10, 0); ctx.stroke();
+    const len = name === 0 ? 30 : name === 1 ? 42 : 50, h = name === 2 ? 20 : 16;
+    ctx.fillStyle = '#20232a';
+    ctx.beginPath(); ctx.roundRect(6, -h / 2, len, h, h / 3); ctx.fill();
+    ctx.fillStyle = '#3fa9f5';
+    ctx.beginPath(); ctx.roundRect(6 + len * .5, -h / 2 + 3, len * .42, h - 6, (h - 6) / 2); ctx.fill();
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath(); ctx.arc(6 + len - 3, 0, 3, 0, 6.283); ctx.fill();
   }
   ctx.restore();
 }
