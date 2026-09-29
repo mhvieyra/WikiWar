@@ -13,7 +13,7 @@ export const cv = document.querySelector('#c');
 export const ctx = cv.getContext('2d');
 
 export const S = {
-  mode: 'menu', untimed: false, settled: false, lang: 'es', from: '', toCanon: '', toNorm2: '', toInfo: null, path: [],
+  mode: 'menu', ranked: true, untimed: false, settled: false, lang: 'es', from: '', toCanon: '', toNorm2: '', toInfo: null, path: [],
   clicks: 0, kills: 0, words: 0, time: 0, lives: 3, wi: 0, cool: 0, gcool: 0, shake: 0, spawnT: 1,
   ammo: [], ammoFlash: 0, strengthT: 0, crateT: 60
 };

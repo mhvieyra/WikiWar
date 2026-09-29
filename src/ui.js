@@ -8,7 +8,7 @@ import { S, state, ctx } from './state.js';
 import { $, clamp, esc, fmtTime, norm } from './utils.js';
 import { WEAPONS, magsLeft } from './weapons.js';
 import { SPRITES, okSpr, drawHeart } from './sprites.js';
-import { resetRun, startGame } from './main.js';
+import { resetRun, startGame, playRandom } from './main.js';
 import { loadElo, rankOf, recordGame } from './elo.js';
 
 export function fade(on) { $('#fade').style.opacity = on ? 1 : 0; }
@@ -32,7 +32,7 @@ export function hideMsg() { $('#msg').style.display = 'none'; }
 
 // Cierra la partida clasificatoria (una sola vez) y devuelve el bloque HTML del Elo.
 export function settle(won) {
-  if (S.untimed || S.settled) return '';
+  if (!S.ranked || S.settled) return '';
   S.settled = true;
   const r = recordGame(won, S);
   return eloHtml(r);
@@ -42,12 +42,16 @@ function eloHtml(r) {
   return '<div class="eloRes ' + (r.delta >= 0 ? 'up' : 'down') + '"><b>ELO ' + r.after + '</b><span>' + sign + r.delta + '</span><small>' + r.rank + (r.promoted ? ' · ¡SUBISTE DE RANGO!' : '') + '</small></div>';
 }
 // Abandonar una clasificatoria en curso cuenta como derrota.
-function leave(fn) { return () => { if (S.mode === 'pause' && !S.untimed && !S.settled) { const r = recordGame(false, S); S.settled = true; toast('Abandonaste: ELO ' + r.after + ' (' + r.delta + ')'); } fn(); }; }
+function leave(fn) { return () => { if (S.mode === 'pause' && S.ranked && !S.settled) { const r = recordGame(false, S); S.settled = true; toast('Abandonaste: ELO ' + r.after + ' (' + r.delta + ')'); } fn(); }; }
 export function renderElo() {
   const d = loadElo();
-  $('#eloBox').innerHTML = $('#mode').value === 'untimed'
-    ? '<small>Sin cronómetro. Esta partida no modifica tu Elo.</small>'
-    : '<b>ELO ' + d.rating + '</b><span>' + rankOf(d.rating) + '</span><small>' + d.wins + '/' + d.games + ' victorias · récord ' + d.peak + '</small>';
+  const ranked = $('#mode').value === 'ranked';
+  $('#customBox').style.display = ranked ? 'none' : '';
+  $('#bRand').style.display = ranked ? 'none' : '';
+  $('#eloBox').innerHTML = !ranked
+    ? '<small>Modo libre: elegís las palabras y el tiempo. Esta partida no modifica tu Elo.</small>'
+    : '<small>La ruta se sortea al empezar, no sabés qué te toca.</small>'
+      + '<b>ELO ' + d.rating + '</b><span>' + rankOf(d.rating) + '</span><small>' + d.wins + '/' + d.games + ' victorias · récord ' + d.peak + '</small>';
 }
 
 export function toMenu() { renderElo(); S.mode = 'menu'; $('#menu').style.display = 'flex'; document.body.classList.remove('play'); $('#status').textContent = ''; }
@@ -60,21 +64,21 @@ export function stats() {
 
 export function win(title) {
   S.mode = 'win';
-  showMsg('Llegaste a «' + title + '»', stats() + settle(true), [['Jugar otra vez', () => resetRun(), false], ['Menú', toMenu, true]], 'win', 'VICTORIA');
+  showMsg('Llegaste a «' + title + '»', stats() + settle(true), [['Jugar otra vez', () => playRandom(), false]].concat(S.ranked ? [] : [['Repetir esta ruta', () => resetRun(), true]], [['Menú', toMenu, true]]), 'win', 'VICTORIA');
 }
 
 export function gameOver() {
   S.mode = 'over';
   showMsg('Te quedaste sin vidas', '<p class="lead">No llegaste a <b>«' + esc(S.toCanon) + '»</b>.</p>' + stats() + settle(false),
-    [['Reintentar', () => resetRun(), false], ['Menú', toMenu, true]], 'over', 'GAME OVER');
+    (S.ranked ? [['Jugar otra vez', () => playRandom(), false]] : [['Reintentar', () => resetRun(), false], ['Otro aleatorio', () => playRandom(), true]]).concat([['Menú', toMenu, true]]), 'over', 'GAME OVER');
 }
 
 export function pause() {
   if (S.mode !== 'play') return;
   S.mode = 'pause';
-  showMsg('En pausa', '<p class="lead">Destino: <b>«' + esc(S.toCanon) + '»</b> · Vidas: <b>' + S.lives + '</b>' + (S.untimed ? '' : '<br>Si abandonás, cuenta como derrota.') + '</p>' + stats(), [
+  showMsg('En pausa', '<p class="lead">Destino: <b>«' + esc(S.toCanon) + '»</b> · Vidas: <b>' + S.lives + '</b>' + (S.ranked ? '<br>Si abandonás, cuenta como derrota.' : '') + '</p>' + stats(), [
     ['Reanudar', () => { S.mode = 'play'; }, false],
-    ['Reiniciar', leave(() => resetRun()), true],
+    [S.ranked ? 'Otra ruta' : 'Reiniciar', leave(() => S.ranked ? playRandom() : resetRun()), true],
     ['Menú', leave(toMenu), true]], 'pause', 'PAUSA');
 }
 
@@ -95,10 +99,14 @@ export function toggleHelp() {
   const el = $('#help'); clearTimeout(showHelp.t); el.classList.toggle('off');
 }
 
-export function randomPair() {
-  const lang = $('#lang').value, P = PAIRS[lang];
+export function pickPair(lang) {
+  const P = PAIRS[lang];
   const a = P.starts[Math.floor(Math.random() * P.starts.length)];
   let b; do { b = P.ends[Math.floor(Math.random() * P.ends.length)]; } while (norm(a) === norm(b));
+  return [a, b];
+}
+export function randomPair() {
+  const [a, b] = pickPair($('#lang').value);
   $('#inFrom').value = a; $('#inTo').value = b;
 }
 
