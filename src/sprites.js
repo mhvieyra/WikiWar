@@ -12,6 +12,9 @@ export const SPRITES = {
   playerRun: { src: '/sprites/player_run.png', fw: 32, fh: 32, fps: 12 },
   playerJump: { src: '/sprites/player_jump.png', fw: 32, fh: 32, fps: 1 },
   playerFly: { src: '/sprites/player_fly.png', fw: 32, fh: 32, fps: 10 },
+  playerCrouch: { src: '/sprites/player_crouch.png', fw: 32, fh: 32, fps: 2 },
+  playerCrouchWalk: { src: '/sprites/player_crouch_walk.png', fw: 32, fh: 32, fps: 8 },
+  playerArm: { src: '/sprites/player_arm.png', fw: 16, fh: 16, fps: 1 },
   enemyRun: { src: '/sprites/enemy_run.png', fw: 32, fh: 32, fps: 10 },
   enemyGunner: { src: '/sprites/enemy_gunner.png', fw: 32, fh: 32, fps: 10 },
   enemyDie: { src: '/sprites/enemy_die.png', fw: 32, fh: 32, fps: 14 },
@@ -44,57 +47,83 @@ export function drawSpr(name, t, cx, by, flip, ang, ax, ay, loop) {
   ctx.restore();
 }
 
-// Placeholder vectorial de un stickman, usado para el jugador y los
-// enemigos cuando no hay sprite disponible. Silueta rellena tipo capsula
-// (torso y miembros gruesos con puntas redondeadas), no lineas finas: el
-// grosor de cada trazo redondeado hace de "relleno". Soporta piernas con
-// rodilla, brazo con codo, cabeza pegada al torso y pose agachada (o.crouch).
+// Altura del hombro sobre los pies (mismas medidas que los sprites reales:
+// 32px de pie, 28px agachado). La usan player.js/enemies.js/main.js para el
+// angulo de apuntado, el origen de balas/granadas y donde se pega el brazo.
+export const SHOULDER_STAND_Y = -32;
+export const SHOULDER_CROUCH_Y = -28;
+// Altura de pecho, solo para el origen de efectos de particulas (golpe, muerte, spawn).
+export const CHEST_Y = -18;
+
+// Color del contorno oscuro que se dibuja detras de cada parte (imita el
+// borde marcado tipo comic de los sprites reales).
+const OUTLINE = '#15151f';
+
+// Traza un path dos veces (contorno grueso oscuro, despues el color real
+// encima mas fino) para lograr el efecto de silueta con borde marcado.
+function strokeOutlined(c, path, width, col) {
+  c.lineWidth = width + 3; c.strokeStyle = OUTLINE; c.stroke(path);
+  c.lineWidth = width; c.strokeStyle = col; c.stroke(path);
+}
+
+// Placeholder vectorial del CUERPO (sin brazo: el brazo/arma se dibuja
+// aparte con drawArm/drawGun, igual que con los sprites reales), usado para
+// el jugador y los enemigos cuando falta el PNG correspondiente. El hombro
+// (shY) coincide con SHOULDER_STAND_Y/SHOULDER_CROUCH_Y para que el brazo
+// se pegue bien al cuerpo tambien en este modo placeholder.
 export function drawStick(x, y, o) {
   const c = ctx;
   c.save(); c.translate(Math.round(x), Math.round(y));
-  if (o.spin) { c.translate(0, -22); c.rotate(o.spin * o.face); c.translate(0, 22); }
-  c.strokeStyle = o.col; c.lineCap = 'round'; c.lineJoin = 'round';
+  if (o.spin) { c.translate(0, -21); c.rotate(o.spin * o.face); c.translate(0, 21); }
+  c.lineCap = 'round'; c.lineJoin = 'round';
   const crouch = !!o.crouch && !o.air;
-  const hipY = crouch ? -8 : -16;
-  const shY = crouch ? -17 : -29;
-  const headY = crouch ? -25 : -37;
-  const headR = 9;
-  const sw = o.moving && !o.air && !crouch ? Math.sin(o.t * 16) : 0;
+  const hipY = crouch ? -9 : -14;
+  const shY = crouch ? SHOULDER_CROUCH_Y : SHOULDER_STAND_Y;
+  const headY = crouch ? -35 : -40;
+  const headR = 7;
+  // parado (no crouch, no aire, no moviendose): postura con piernas separadas,
+  // no juntas en una sola linea. sw controla cuanto se abren/mueven.
+  const sw = o.air || crouch ? 0 : o.moving ? Math.sin(o.t * 16) : .5;
 
   // piernas (con rodilla)
-  c.lineWidth = 7;
-  c.beginPath();
+  const legs = new Path2D();
   if (o.air) {
-    c.moveTo(0, hipY); c.lineTo(-6, hipY + 9); c.lineTo(-8, hipY + 17);
-    c.moveTo(0, hipY); c.lineTo(8, hipY + 7); c.lineTo(10, hipY + 15);
+    legs.moveTo(0, hipY); legs.lineTo(-4, hipY + 6); legs.lineTo(-5, hipY + 11);
+    legs.moveTo(0, hipY); legs.lineTo(5, hipY + 5); legs.lineTo(6, hipY + 10);
   } else if (crouch) {
-    c.moveTo(0, hipY); c.lineTo(-9, hipY * .45); c.lineTo(-6, 0);
-    c.moveTo(0, hipY); c.lineTo(9, hipY * .45); c.lineTo(6, 0);
+    legs.moveTo(0, hipY); legs.lineTo(-6, hipY * .45); legs.lineTo(-4, 0);
+    legs.moveTo(0, hipY); legs.lineTo(6, hipY * .45); legs.lineTo(4, 0);
   } else {
-    const kneeY = hipY * .5 - Math.abs(sw) * 3;
-    c.moveTo(0, hipY); c.lineTo(sw * 5, kneeY); c.lineTo(sw * 10, 0);
-    c.moveTo(0, hipY); c.lineTo(-sw * 5, kneeY); c.lineTo(-sw * 10, 0);
+    const kneeY = hipY * .5 - Math.abs(sw) * 2;
+    legs.moveTo(0, hipY); legs.lineTo(sw * 3, kneeY); legs.lineTo(sw * 6, 0);
+    legs.moveTo(0, hipY); legs.lineTo(-sw * 3, kneeY); legs.lineTo(-sw * 6, 0);
   }
-  c.stroke();
+  strokeOutlined(c, legs, 4, o.col);
 
   // torso (grueso, sin cuello: la cabeza se apoya directo encima)
-  c.lineWidth = 10;
-  c.beginPath(); c.moveTo(0, hipY); c.lineTo(0, shY); c.stroke();
+  const torso = new Path2D(); torso.moveTo(0, hipY); torso.lineTo(0, shY);
+  strokeOutlined(c, torso, 5.5, o.col);
 
-  // brazo (con codo), pegado al cuerpo
-  c.lineWidth = 6;
-  c.beginPath();
-  if (o.air) {
-    c.moveTo(0, shY + 2); c.lineTo(-o.face * 7, shY - 2); c.lineTo(-o.face * 9, shY - 9);
-  } else if (crouch) {
-    c.moveTo(0, shY + 2); c.lineTo(-o.face * 5, shY + 10); c.lineTo(-o.face * 2, hipY + 3);
+  // cabeza (ovalada, con contorno)
+  c.beginPath(); c.ellipse(0, headY, headR + 1.5, headR * 1.3 + 1.5, 0, 0, 6.283); c.fillStyle = OUTLINE; c.fill();
+  c.beginPath(); c.ellipse(0, headY, headR, headR * 1.3, 0, 0, 6.283); c.fillStyle = o.col; c.fill();
+  c.restore();
+}
+
+// Brazo que apunta al mouse: rota desde el hombro segun el angulo `a`, y se
+// espeja en vertical al apuntar a la izquierda (igual que drawGun). Se
+// dibuja siempre aparte del cuerpo, tenga este sprite real o placeholder.
+export function drawArm(x, y, a, col) {
+  const c = ctx;
+  c.save(); c.translate(Math.round(x), Math.round(y)); c.rotate(a);
+  if (Math.cos(a) < 0) c.scale(1, -1);
+  if (okSpr('playerArm')) {
+    const d = SPRITES.playerArm, scale = d.scale ?? SPR_SCALE;
+    // hombro en el pixel (1.5, 8.5) de la imagen fuente de 16x16.
+    c.drawImage(d.img, 0, 0, d.fw, d.fh, -1.5 * scale, -8.5 * scale, d.fw * scale, d.fh * scale);
   } else {
-    const armSw = o.moving ? Math.sin(o.t * 16) * 3 : 0;
-    c.moveTo(0, shY + 2); c.lineTo(-o.face * 6, shY + 8 + armSw); c.lineTo(-o.face * 3, shY + 16 + armSw);
+    strokeOutlined(c, (() => { const p = new Path2D(); p.moveTo(0, 0); p.lineTo(14, 0); return p; })(), 5, col);
   }
-  c.stroke();
-
-  c.fillStyle = o.col; c.beginPath(); c.arc(0, headY, headR, 0, 6.283); c.fill();
   c.restore();
 }
 
@@ -106,11 +135,28 @@ export function drawGun(name, x, y, a, col) {
     const d = SPRITES[spriteName];
     ctx.drawImage(d.img, 0, 0, d.fw, d.fh, -d.fw * SPR_SCALE * .2, -d.fh * SPR_SCALE * .5, d.fw * SPR_SCALE, d.fh * SPR_SCALE);
   } else {
-    ctx.strokeStyle = col; ctx.lineWidth = 6; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(8, 0); ctx.stroke();
-    ctx.fillStyle = '#272727';
-    const len = name === 0 ? 13 : name === 1 ? 19 : 23;
-    ctx.beginPath(); ctx.roundRect(5, -4, len, 8, 3); ctx.fill();
+    ctx.strokeStyle = OUTLINE; ctx.lineWidth = 16; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(10, 0); ctx.stroke();
+    ctx.strokeStyle = col; ctx.lineWidth = 11;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(10, 0); ctx.stroke();
+    const len = name === 0 ? 30 : name === 1 ? 42 : 50, h = name === 2 ? 22 : 18;
+    const body = new Path2D(); body.roundRect(6, -h / 2, len, h, h / 3);
+    ctx.lineJoin = 'round'; ctx.strokeStyle = OUTLINE; ctx.lineWidth = 3;
+    ctx.fillStyle = '#242832'; ctx.fill(body); ctx.stroke(body);
+    // aleta/mira arriba, cerca de la mano
+    ctx.fillStyle = '#242832';
+    ctx.beginPath(); ctx.roundRect(9, -h / 2 - 6, len * .22, 8, 2); ctx.fill(); ctx.stroke();
+    // ventana celeste (mira) y franja de cañon celeste claro
+    ctx.fillStyle = '#2bb8e8';
+    ctx.beginPath(); ctx.roundRect(6 + len * .1, -h / 2 + 2, len * .18, h * .4, 3); ctx.fill();
+    ctx.fillStyle = '#8fe3ff';
+    ctx.beginPath(); ctx.roundRect(6 + len * .48, h * .06, len * .42, h * .28, (h * .28) / 2); ctx.fill();
+    // acento amarillo
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath(); ctx.moveTo(6 + len * .34, -1); ctx.lineTo(6 + len * .44, -h * .22); ctx.lineTo(6 + len * .44, h * .05); ctx.closePath(); ctx.fill();
+    // punta del cañon, un poco mas clara
+    ctx.fillStyle = '#3a4050';
+    ctx.beginPath(); ctx.roundRect(6 + len - 6, -h * .22, 8, h * .44, 3); ctx.fill();
   }
   ctx.restore();
 }

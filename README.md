@@ -9,6 +9,25 @@ WikiWar es un proyecto independiente y sin fines de lucro, **no afiliado a
 la Fundación Wikimedia**. El contenido de los artículos viene de la API
 pública de Wikipedia y se usa bajo su licencia correspondiente.
 
+## Controles
+
+| Tecla | Acción |
+|---|---|
+| A / D o flechas | Mover |
+| Espacio / W / ↑ | Saltar (mantené apretado en el aire para volar) |
+| S / ↓ | Bajar de la plataforma actual |
+| C o Shift | Agacharse (mientras se mantiene apretada) |
+| Click izquierdo | Disparar |
+| Click derecho | Tirar granada |
+| 1, 2, 3 | Cambiar de arma |
+| E | Entrar al link donde estás parado |
+| Esc | Pausa |
+| M | Silenciar/activar sonido |
+
+Agachado la hitbox se achica, caminás a la mitad de velocidad y no podés
+saltar ni volar; al soltar la tecla solo te parás si hay espacio libre
+arriba.
+
 ## Cómo funciona
 
 El texto del artículo sale de la API de Wikipedia (`action=parse`, con
