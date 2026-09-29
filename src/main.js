@@ -136,7 +136,8 @@ function update(dt) {
     if (Math.random() < .7) state.parts.push({ x: p.x + (Math.random() - .5) * 6, y: p.y, vx: (Math.random() - .5) * 40, vy: 120 + Math.random() * 100, life: .35, c: Math.random() < .5 ? '#ff7a3d' : '#ffd166', s: 3 });
   }
   if (p.onGround) { p.fuel = Math.min(100, p.fuel + FUEL_REGEN * dt); p.usedFlip = false; }
-  if ((keys.KeyS || keys.ArrowDown) && p.onGround) p.drop = .22;
+  p.crouch = p.onGround && (keys.KeyS || keys.ArrowDown);
+  if (p.crouch) p.drop = .22;
   if (p.flipping) { p.spin += 13 * dt; if (p.spin >= 6.283) { p.spin = 0; p.flipping = false; } }
 
   const wy = state.my + state.cam;
