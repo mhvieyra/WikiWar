@@ -11,8 +11,8 @@ import { STRENGTH_MULT } from './config.js';
 // un enemigo con la pistola; sin `ammo` el arma es infinita).
 export const WEAPONS = [
   { name: 'PISTOLA', rate: .28, dmg: 1, speed: 1300, spread: .02, pellets: 1, pierce: 2, kick: 20, snd: [520, .06], ammo: null },
-  { name: 'SMG', rate: .075, dmg: .7, speed: 1500, spread: .08, pellets: 1, pierce: 1, kick: 10, snd: [380, .04], mag: 30, ammo: { start: 90, max: 90, kill: 10 } },
-  { name: 'ESCOPETA', rate: .75, dmg: 1, speed: 1200, spread: .22, pellets: 7, pierce: 1, kick: 150, snd: [160, .12], mag: 6, ammo: { start: 18, max: 18, kill: 2 } }
+  { name: 'SMG', rate: .075, dmg: .7, speed: 1500, spread: .08, pellets: 1, pierce: 1, kick: 10, snd: [380, .04], mag: 90, ammo: { start: 270, max: 270, kill: 30 } },
+  { name: 'ESCOPETA', rate: .75, dmg: 1, speed: 1200, spread: .22, pellets: 7, pierce: 1, kick: 150, snd: [160, .12], mag: 18, ammo: { start: 54, max: 54, kill: 6 } }
 ];
 
 // Reservas de balas: S.ammo[i] es la cantidad de la arma i (Infinity = infinita).

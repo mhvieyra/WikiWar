@@ -243,13 +243,14 @@ function updBullets(dt) {
 }
 
 /* --------------------------------------------------------------------- dibujo */
+const pageEl = $('#page');
 function draw() {
   const L = state.L, p = state.p;
   ctx.clearRect(0, 0, state.W, state.H);
   let shx = 0, shy = 0;
   if (S.shake > 0) { shx = (Math.random() - .5) * S.shake; shy = (Math.random() - .5) * S.shake; }
   const ty = -Math.round(state.cam) + Math.round(shy);
-  $('#page').style.transform = 'translate3d(' + Math.round(shx) + 'px,' + ty + 'px,0)';
+  pageEl.style.transform = 'translate3d(' + Math.round(shx) + 'px,' + ty + 'px,0)';
   if (!L || !p) return;
   ctx.save(); ctx.translate(Math.round(shx), ty);
   const vt = state.cam - 60, vb = state.cam + state.H + 60, now = performance.now();
@@ -289,8 +290,7 @@ function draw() {
       if (okSpr('explosion')) drawSpr('explosion', f.t, f.x, f.y, false, 0, .5, .5, false);
       else { const r = 95 * Math.min(1, f.t * 5); ctx.globalAlpha = 1 - f.t; ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(f.x, f.y, r * .6, 0, 6.283); ctx.fill(); ctx.strokeStyle = '#ff7a3d'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(f.x, f.y, r, 0, 6.283); ctx.stroke(); ctx.globalAlpha = 1; }
     } else if (f.type === 'die' && okSpr('enemyDie')) {
-      if (f.hue) { ctx.save(); ctx.filter = 'hue-rotate(' + f.hue + 'deg)'; drawSpr('enemyDie', f.t, f.x, f.y, f.face < 0, 0, .5, 1, false); ctx.restore(); }
-      else drawSpr('enemyDie', f.t, f.x, f.y, f.face < 0, 0, .5, 1, false);
+      drawSpr('enemyDie', f.t, f.x, f.y, f.face < 0, 0, .5, 1, false, f.hue);
     }
   }
   for (const q of state.parts) { ctx.globalAlpha = Math.min(1, q.life * 2); ctx.fillStyle = q.c; ctx.fillRect(Math.round(q.x), Math.round(q.y), q.s, q.s); }

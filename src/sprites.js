@@ -44,7 +44,23 @@ for (const k in SPRITES) {
 
 export function okSpr(n) { return SPRITES[n] && SPRITES[n].ok; }
 
-export function drawSpr(name, t, cx, by, flip, ang, ax, ay, loop) {
+// Hojas tintadas: ctx.filter en cada frame por enemigo es carisimo (causaba
+// lag con varios enemigos), asi que el hue-rotate se aplica una sola vez a un
+// canvas cacheado por (sprite, hue cuantizado).
+const HUE_STEP = 30, tinted = new Map();
+function tintedSheet(name, hue) {
+  const q = Math.round(hue / HUE_STEP) % (360 / HUE_STEP), key = name + ':' + q;
+  let c = tinted.get(key);
+  if (!c) {
+    const img = SPRITES[name].img;
+    c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const g = c.getContext('2d'); g.filter = 'hue-rotate(' + q * HUE_STEP + 'deg)'; g.drawImage(img, 0, 0);
+    tinted.set(key, c);
+  }
+  return c;
+}
+
+export function drawSpr(name, t, cx, by, flip, ang, ax, ay, loop, hue) {
   const d = SPRITES[name];
   const n = Math.max(1, Math.floor(d.img.naturalWidth / d.fw));
   const f = loop === false ? Math.min(n - 1, Math.floor(t * d.fps)) : Math.floor(t * d.fps) % n;
@@ -52,7 +68,7 @@ export function drawSpr(name, t, cx, by, flip, ang, ax, ay, loop) {
   ctx.translate(Math.round(cx), Math.round(by));
   if (ang) ctx.rotate(ang);
   if (flip) ctx.scale(-1, 1);
-  ctx.drawImage(d.img, f * d.fw, 0, d.fw, d.fh, -d.fw * SPR_SCALE * ax, -d.fh * SPR_SCALE * ay, d.fw * SPR_SCALE, d.fh * SPR_SCALE);
+  ctx.drawImage(hue ? tintedSheet(name, hue) : d.img, f * d.fw, 0, d.fw, d.fh, -d.fw * SPR_SCALE * ax, -d.fh * SPR_SCALE * ay, d.fw * SPR_SCALE, d.fh * SPR_SCALE);
   ctx.restore();
 }
 
