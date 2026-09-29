@@ -11,7 +11,7 @@ import { updateCrates, updateItems, drawCrates, drawItems, hitCrate } from './cr
 import { spawnEnemy, updateEnemy, drawEnemy, hitEnemy } from './enemies.js';
 import { physics, canStandUp } from './physics.js';
 import { WEAPONS, resetAmmo } from './weapons.js';
-import { playSfx, boom, toggleMuted } from './audio.js';
+import { playSfx, boom, toggleMuted, jetSound } from './audio.js';
 import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
 import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI } from './ui.js';
 
@@ -168,7 +168,10 @@ function update(dt) {
   const shoulderY = p.crouch ? SHOULDER_CROUCH_Y : SHOULDER_STAND_Y;
   p.aim = Math.atan2(wy - (p.y + shoulderY), state.mx - p.x); p.face = Math.cos(p.aim) >= 0 ? 1 : -1;
   if (state.mouseDown && S.cool <= 0) fire();
+  const vyBefore = p.vy, wasAir = !p.onGround;
   physics(p, dt);
+  jetSound(p.flying);
+  if (wasAir && p.onGround && vyBefore > 300) playSfx('land', 90, .14, 'triangle', Math.min(.1, .04 + vyBefore / 20000), -50);
   updateJetSmoke(dt);
 
   // camara
