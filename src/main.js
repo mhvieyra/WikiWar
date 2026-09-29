@@ -13,7 +13,7 @@ import { updateCrates, updateItems, drawCrates, drawItems, hitCrate } from './cr
 import { spawnEnemy, updateEnemy, drawEnemy, hitEnemy } from './enemies.js';
 import { physics, canStandUp } from './physics.js';
 import { WEAPONS, resetAmmo } from './weapons.js';
-import { makeCrater, coveredBy, touches, inCrater, spawnDebris, updateDebris, drawDebris, drawTerrain } from './craters.js';
+import { makeCrater, holeTouches, inCrater, shedLetters, resetLetters, spawnShards, updateDebris, drawDebris, drawTerrain, drawDamage } from './craters.js';
 import { playSfx, boom, toggleMuted, jetSound } from './audio.js';
 import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
 import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI, toggleHelp, pxBox, PF, VT, pickPair, toMenu } from './ui.js';
@@ -129,13 +129,15 @@ function destroyPlat(pl, permanent, blast) {
   if (!permanent) L.destroyed.push(pl);
   if (pl.kind === 'word') {
     S.words++; burst(pl.x + pl.w / 2, pl.y + pl.h / 2, 4, '#202122', 140, 40);
-    spawnDebris(pl, blast ? blast[0] : pl.x + pl.w / 2, blast ? blast[1] : pl.y + pl.h, blast ? blast[2] : 0);
+    shedLetters(pl, blast, true);
+  } else {
+    burst(pl.x + pl.w / 2, pl.y + pl.h / 2, 26, '#8a8f98', 260, 80);
+    spawnShards(pl, blast); S.shake = Math.max(S.shake, 6);
   }
-  else burst(pl.x + pl.w / 2, pl.y + pl.h / 2, 26, '#8a8f98', 260, 80);
 }
-function hitPlat(pl, d) {
+function hitPlat(pl, d, blast) {
   pl.hp -= d;
-  if (pl.hp <= 0) destroyPlat(pl); else burst(pl.x + pl.w / 2, pl.y + pl.h / 2, 3, '#8a8f98', 120, 30);
+  if (pl.hp <= 0) destroyPlat(pl, false, blast); else burst(pl.x + pl.w / 2, pl.y + pl.h / 2, pl.kind === 'img' ? 6 : 3, '#8a8f98', 120, 30);
 }
 export function hurt(d, kx) {
   const p = state.p;
@@ -157,14 +159,15 @@ function explode(x, y, mult) {
   const R = 95, p = state.p;
   state.fx.push({ type: 'boom', x, y, t: 0 }); S.shake = 14; boom(.3);
   burst(x, y, 30, '#ff7a3d', 360, 100);
-  const L = state.L, cs = makeCrater(x, y, R * 1.15), blast = [x, y, 420];
+  const L = state.L, bb = makeCrater(x, y, R * 1.15), blast = [x, y, 420];
   for (const pl of L.plats) {
-    if (pl.link) { if (touches(cs, pl) && !L.covered.includes(pl)) L.covered.push(pl); continue; }
+    if (pl.x > bb.x1 || pl.x + pl.w < bb.x0 || pl.y > bb.y1 || pl.y + pl.h < bb.y0) continue;
+    if (pl.link) { if (holeTouches(pl) && !L.covered.includes(pl)) L.covered.push(pl); continue; }
     if (!pl.alive) continue;
-    const cx = pl.x + pl.w / 2, cy = pl.y + pl.h / 2;
-    if (Math.abs(cx - x) > R + pl.w / 2 || Math.abs(cy - y) > R + pl.h) continue;
-    if (coveredBy(cs, cx, cy)) destroyPlat(pl, true, blast);
-    else if (pl.kind === 'img' && Math.hypot(cx - x, cy - y) < R) hitPlat(pl, 3);
+    if (pl.kind === 'img') {
+      const nx = clamp(x, pl.x, pl.x + pl.w), ny = clamp(y, pl.y, pl.y + pl.h);
+      if (Math.hypot(nx - x, ny - y) < R) hitPlat(pl, 4, blast);
+    } else if (shedLetters(pl, blast, false) === 0) destroyPlat(pl, true, blast);
   }
   for (const e of state.enemies) if (!e.dead && Math.hypot(e.x - x, e.y - 20 - y) < R * 1.1) hitEnemy(e, 4 * mult, Math.sign(e.x - x), -1);
   for (const c of state.crates) if (Math.hypot(c.x - x, c.y - CRATE_H / 2 - y) < R * 1.1) hitCrate(c, 2 * mult);
@@ -258,7 +261,8 @@ function update(dt) {
   while (L.destroyed.length && now - L.destroyed[0].deadAt > REGEN) {
     const pl = L.destroyed.shift();
     if (inCrater(pl.x + pl.w / 2, pl.y + pl.h / 2)) continue;
-    pl.alive = true; pl.hp = pl.maxhp; pl.el.style.visibility = 'visible';
+    pl.alive = true; pl.hp = pl.maxhp; pl.cracks = null; pl.el.style.visibility = 'visible';
+    if (pl.kind === 'word') resetLetters(pl);
   }
   updateHud();
 }
@@ -309,7 +313,7 @@ function draw() {
   const vt = state.cam - 60, vb = state.cam + state.H + 60, now = performance.now();
 
   // suelo
-  drawTerrain(vt, vb);
+  drawTerrain(vt, vb, Math.round(shx), ty); drawDamage(vt, vb);
 
   // link resaltado y destino
   const pulse = .5 + .5 * Math.sin(now / 180);
