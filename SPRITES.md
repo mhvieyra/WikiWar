@@ -47,7 +47,7 @@ describe este archivo.
 | `crate_break.png` | 32x32 | 6 | igual que `crate.png` | Caja rompiéndose (una vez, a 14 fps) |
 | `parachute.png` | 32x32 | 2 | centro abajo: la base queda en el centro del techo de la caja | Paracaídas (se dibuja sobre la caja mientras cae) |
 | `item_medkit.png`, `item_strength.png`, `item_ammo.png` | 16x16 | 2 | centro abajo | Botiquín, poción de fuerza y munición (flotan a 4 fps) |
-| `jetpack.png` | 16x16 | 1 | centro; tobera en el pixel (8, 15) | Mochila, detrás del torso, espejada según hacia dónde mira |
+| `jetpack.png` | 16x16 | 1 | centro; tobera en el pixel (8, 15) | Mochila, solo visible al volar, detrás del torso, espejada según hacia dónde mira |
 | `jet_flame.png` | 16x24 | 4 | arriba al centro, en la tobera | Llama mientras vuela (loop a 16 fps) |
 | `jet_smoke.png` | 16x16 | 6 | centro | Bocanada de humo desde la tobera (una vez, 0.5 s) |
 

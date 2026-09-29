@@ -159,7 +159,6 @@ function update(dt) {
   p.flying = false;
   if (!p.onGround && hold && p.holdT > .2 && p.fuel > 0) {
     p.vy = Math.max(p.vy - FLY_ACC * dt, -FLY_MAX); p.fuel -= FUEL_DRAIN * dt; p.flying = true;
-    if (!okSpr('jetFlame') && Math.random() < .7) state.parts.push({ x: p.x + (Math.random() - .5) * 6, y: p.y, vx: (Math.random() - .5) * 40, vy: 120 + Math.random() * 100, life: .35, c: Math.random() < .5 ? '#ff7a3d' : '#ffd166', s: 3 });
   }
   if (p.onGround) { p.fuel = Math.min(100, p.fuel + FUEL_REGEN * dt); p.usedFlip = false; }
   if ((keys.KeyS || keys.ArrowDown) && p.onGround) p.drop = .22;
