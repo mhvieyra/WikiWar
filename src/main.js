@@ -271,7 +271,10 @@ function draw() {
     if (f.type === 'boom') {
       if (okSpr('explosion')) drawSpr('explosion', f.t, f.x, f.y, false, 0, .5, .5, false);
       else { const r = 95 * Math.min(1, f.t * 5); ctx.globalAlpha = 1 - f.t; ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(f.x, f.y, r * .6, 0, 6.283); ctx.fill(); ctx.strokeStyle = '#ff7a3d'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(f.x, f.y, r, 0, 6.283); ctx.stroke(); ctx.globalAlpha = 1; }
-    } else if (f.type === 'die' && okSpr('enemyDie')) drawSpr('enemyDie', f.t, f.x, f.y, f.face < 0, 0, .5, 1, false);
+    } else if (f.type === 'die' && okSpr('enemyDie')) {
+      if (f.hue) { ctx.save(); ctx.filter = 'hue-rotate(' + f.hue + 'deg)'; drawSpr('enemyDie', f.t, f.x, f.y, f.face < 0, 0, .5, 1, false); ctx.restore(); }
+      else drawSpr('enemyDie', f.t, f.x, f.y, f.face < 0, 0, .5, 1, false);
+    }
   }
   for (const q of state.parts) { ctx.globalAlpha = Math.min(1, q.life * 2); ctx.fillStyle = q.c; ctx.fillRect(Math.round(q.x), Math.round(q.y), q.s, q.s); }
   ctx.globalAlpha = 1;
