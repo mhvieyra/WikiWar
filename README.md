@@ -27,10 +27,12 @@ pública de Wikipedia y se usa bajo su licencia correspondiente.
 
 ## Modos y Elo
 
-- **Clasificatoria** (por defecto): cronómetro visible y la partida suma o
-  resta Elo.
-- **Sin tiempo**: sin cronómetro y sin efecto sobre el Elo, para jugar
-  relajado.
+- **Clasificatoria** (por defecto): la ruta se sortea al empezar, así que
+  no sabés qué palabras te tocan hasta que arranca la partida. Cronómetro
+  visible y suma o resta Elo. Al terminar, «Jugar otra vez» te lleva a otra
+  ruta aleatoria.
+- **Personalizado**: elegís origen y destino (o tocás Aleatorio) y si querés
+  jugar con o sin cronómetro. No afecta el Elo.
 
 El Elo arranca en 1000 y se guarda en el navegador (`localStorage`). Cada
 clasificatoria se juega contra una ruta de rating fijo (1200). Una derrota

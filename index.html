@@ -40,13 +40,17 @@
   <p class="tag">Llegá de un artículo de Wikipedia a otro. Cada palabra se puede romper, los links son portales y hay stickmans que quieren matarte. Tenés 3 vidas.</p>
   <div class="field"><label for="lang">Idioma</label>
     <select id="lang"><option value="es">Español</option><option value="en">English</option></select></div>
-  <div class="pair">
-    <div class="field"><label for="inFrom">Origen</label><input id="inFrom" placeholder="Pizza" autocomplete="off"></div>
-    <div class="arrow">&gt;</div>
-    <div class="field"><label for="inTo">Destino</label><input id="inTo" placeholder="Argentina" autocomplete="off"></div>
-  </div>
   <div class="field"><label for="mode">Modo</label>
-    <select id="mode"><option value="ranked">Clasificatoria (con tiempo, suma Elo)</option><option value="untimed">Sin tiempo (relajado, sin Elo)</option></select></div>
+    <select id="mode"><option value="ranked">Clasificatoria (ruta sorpresa, con tiempo, suma Elo)</option><option value="custom">Personalizado (elegís las palabras, sin Elo)</option></select></div>
+  <div id="customBox">
+    <div class="pair">
+      <div class="field"><label for="inFrom">Origen</label><input id="inFrom" placeholder="Pizza" autocomplete="off"></div>
+      <div class="arrow">&gt;</div>
+      <div class="field"><label for="inTo">Destino</label><input id="inTo" placeholder="Argentina" autocomplete="off"></div>
+    </div>
+    <div class="field"><label for="timing">Tiempo</label>
+      <select id="timing"><option value="timed">Con tiempo (cronómetro visible)</option><option value="untimed">Sin tiempo (relajado)</option></select></div>
+  </div>
   <div id="eloBox" class="elo"></div>
   <div class="row"><button id="bPlay" class="primary">Jugar</button><button id="bRand" class="ghost">Aleatorio</button></div>
   <div id="status"></div>

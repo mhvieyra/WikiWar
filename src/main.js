@@ -15,7 +15,7 @@ import { physics, canStandUp } from './physics.js';
 import { WEAPONS, resetAmmo } from './weapons.js';
 import { playSfx, boom, toggleMuted, jetSound } from './audio.js';
 import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
-import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI, toggleHelp, pxBox, PF, VT } from './ui.js';
+import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI, toggleHelp, pxBox, PF, VT, pickPair, toMenu } from './ui.js';
 
 /* ------------------------------------------------------------------ canvas */
 function resize() {
@@ -60,18 +60,55 @@ export function resetRun() {
   loadLevel(S.from, true);
 }
 
+function applyPair(a, b, target) {
+  S.from = a.title; S.toCanon = b.title; S.toNorm2 = norm(target); S.toInfo = b;
+  $('#menu').style.display = 'none'; document.body.classList.add('play'); setGoal();
+}
+
+// Sortea rutas hasta encontrar una cuyos dos articulos existan (reintenta
+// unas pocas veces por si Wikipedia devuelve un titulo que cambio).
+async function drawRoute(lang) {
+  S.lang = lang;
+  for (let i = 0; i < 4; i++) {
+    const [f, t] = pickPair(lang);
+    try {
+      const [a, b] = await Promise.all([fetchInfo(f), fetchInfo(t)]);
+      if (a && b && norm(a.title) !== norm(b.title)) return { a, b, t };
+    } catch (e) { return null; }
+  }
+  return null;
+}
+
+// "Jugar otra vez": nueva ruta aleatoria en el mismo idioma.
+export async function playRandom() {
+  S.mode = 'loading'; fade(true);
+  const r = await drawRoute(S.lang);
+  if (!r) { fade(false); toMenu(); $('#status').textContent = 'No pude sortear una ruta nueva. Revisá tu conexión.'; return; }
+  applyPair(r.a, r.b, r.t);
+  resetRun();
+}
+
 export async function startGame() {
-  const from = $('#inFrom').value.trim(), to = $('#inTo').value.trim(), st = $('#status');
+  const st = $('#status');
+  S.ranked = $('#mode').value === 'ranked';
+  S.untimed = !S.ranked && $('#timing').value === 'untimed';
+  const lang = $('#lang').value;
+  if (S.ranked) {
+    st.textContent = 'Sorteando tu ruta...';
+    const r = await drawRoute(lang);
+    if (!r) { st.textContent = 'No pude sortear una ruta. Revisá tu conexión con Wikipedia.'; return; }
+    applyPair(r.a, r.b, r.t); resetRun(); return;
+  }
+  const from = $('#inFrom').value.trim(), to = $('#inTo').value.trim();
   if (!from || !to) { st.textContent = 'Poné un origen y un destino, o tocá ALEATORIO.'; return; }
-  S.lang = $('#lang').value; S.untimed = $('#mode').value === 'untimed'; st.textContent = 'Buscando los artículos...';
+  S.lang = lang; st.textContent = 'Buscando los artículos...';
   let a, b;
   try { [a, b] = await Promise.all([fetchInfo(from), fetchInfo(to)]); }
   catch (e) { st.textContent = 'No pude conectar con Wikipedia: ' + e.message; return; }
   if (!a) { st.textContent = 'No encontré «' + from + '».'; return; }
   if (!b) { st.textContent = 'No encontré «' + to + '».'; return; }
   if (norm(a.title) === norm(b.title)) { st.textContent = 'El origen y el destino son el mismo artículo.'; return; }
-  S.from = a.title; S.toCanon = b.title; S.toNorm2 = norm(to); S.toInfo = b;
-  $('#menu').style.display = 'none'; document.body.classList.add('play'); setGoal();
+  applyPair(a, b, to);
   resetRun();
 }
 
