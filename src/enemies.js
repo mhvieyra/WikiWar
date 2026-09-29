@@ -78,7 +78,7 @@ export function drawEnemy(e) {
     drawStick(e.x, e.y, { face: e.face, col: e.type === 'gunner' ? '#8e2bb0' : '#c0392b', t: e.t, moving, air });
     if (e.type === 'gunner') {
       const a = Math.atan2((p.y - 22) - (e.y - 26), p.x - e.x);
-      ctx.strokeStyle = '#8e2bb0'; ctx.lineWidth = 3;
+      ctx.strokeStyle = '#8e2bb0'; ctx.lineWidth = 6; ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(e.x, e.y - 26); ctx.lineTo(e.x + Math.cos(a) * 9, e.y - 26 + Math.sin(a) * 9); ctx.stroke();
       drawGun(0, e.x, e.y - 26, a, '#8e2bb0');
     }

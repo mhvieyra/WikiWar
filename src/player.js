@@ -46,7 +46,7 @@ export function drawPlayer() {
     drawSpr(sn, p.t, p.x, p.y, p.face < 0, 0, .5, 1);
     ctx.restore();
   } else drawStick(p.x, p.y, { face: p.face, col: '#111', t: p.t, moving, air, spin: p.spin, crouch: p.crouch });
-  ctx.strokeStyle = '#111'; ctx.lineWidth = 3;
+  ctx.strokeStyle = '#111'; ctx.lineWidth = 6; ctx.lineCap = 'round';
   if (!okSpr(sn || '')) { ctx.beginPath(); ctx.moveTo(p.x, p.y - 26); ctx.lineTo(p.x + Math.cos(p.aim) * 9, p.y - 26 + Math.sin(p.aim) * 9); ctx.stroke(); }
   drawGun(S.wi, p.x, p.y - 26, p.aim, '#111');
 }
