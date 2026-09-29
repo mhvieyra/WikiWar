@@ -55,7 +55,7 @@ export async function loadLevel(title, first) {
 }
 
 export function resetRun() {
-  S.clicks = 0; S.kills = 0; S.words = 0; S.time = 0; S.lives = 3; S.path = [];
+  S.clicks = 0; S.kills = 0; S.words = 0; S.time = 0; S.settled = false; S.lives = 3; S.path = [];
   resetAmmo(); S.strengthT = 0; S.ammoFlash = 0; S.crateT = CRATE_EVERY;
   loadLevel(S.from, true);
 }
@@ -63,7 +63,7 @@ export function resetRun() {
 export async function startGame() {
   const from = $('#inFrom').value.trim(), to = $('#inTo').value.trim(), st = $('#status');
   if (!from || !to) { st.textContent = 'Poné un origen y un destino, o tocá ALEATORIO.'; return; }
-  S.lang = $('#lang').value; st.textContent = 'Buscando los artículos...';
+  S.lang = $('#lang').value; S.untimed = $('#mode').value === 'untimed'; st.textContent = 'Buscando los artículos...';
   let a, b;
   try { [a, b] = await Promise.all([fetchInfo(from), fetchInfo(to)]); }
   catch (e) { st.textContent = 'No pude conectar con Wikipedia: ' + e.message; return; }
@@ -128,7 +128,8 @@ function explode(x, y, mult) {
 /* ---------------------------------------------------------------- update */
 function update(dt) {
   const p = state.p, L = state.L, keys = state.keys;
-  S.time += dt; S.cool -= dt; S.gcool -= dt; p.t += dt; p.inv -= dt;
+  if (!S.untimed) S.time += dt;
+  S.cool -= dt; S.gcool -= dt; p.t += dt; p.inv -= dt;
 
   // link cercano (se calcula antes de agacharse: agacharse solo tiene efecto
   // parado encima de un link).
