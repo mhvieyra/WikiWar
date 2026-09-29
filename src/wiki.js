@@ -5,6 +5,7 @@
 import { MAXH, REMOVE, STOP, RS } from './config.js';
 import { S, state } from './state.js';
 import { $, norm } from './utils.js';
+import { initCraters } from './craters.js';
 
 async function api(params) {
   const q = new URLSearchParams(Object.assign({ format: 'json', formatversion: '2', origin: '*' }, params));
@@ -108,7 +109,9 @@ export function buildLevel() {
   });
   const t1 = S.toNorm2, t2 = norm(S.toCanon);
   const targetPlats = plats.filter(pl => pl.link && (norm(pl.link) === t2 || norm(pl.link) === t1));
-  return { plats, byAnchor, targetPlats, top: new Map(), full: new Map(), destroyed: [], h: 0, floorY: 0, spawn: { x: state.W / 2, y: 120 } };
+  const L = { plats, byAnchor, targetPlats, top: new Map(), full: new Map(), destroyed: [], h: 0, floorY: 0, spawn: { x: state.W / 2, y: 120 } };
+  initCraters(L);
+  return L;
 }
 
 export function measure() {
