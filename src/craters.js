@@ -255,15 +255,18 @@ function syncLetters(pl) {
   }
 }
 
-// Un disparo se lleva solo la letra que golpea (y alguna vecina en la
-// escopeta si blast). Devuelve cuantas letras quedan en pie.
+// Un disparo se lleva entre 1 y 5 letras (al azar): la que golpea y las mas
+// cercanas a ella. Devuelve cuantas letras quedan en pie.
 export function shootLetter(pl, x, y) {
-  const arr = letters(pl), i = letterIdx(pl, x);
-  if (!arr.length || pl.gone[i]) return arr.filter((l, k) => !pl.gone[k]).length;
-  pl.gone[i] = true; pl.shot = true; pl.shotAt = performance.now();
+  const arr = letters(pl);
+  const alive = arr.map((l, k) => k).filter(k => !pl.gone[k]);
+  if (!alive.length) return 0;
+  const n = 1 + Math.floor(Math.random() * 5);
+  alive.sort((p, q) => Math.abs(arr[p].cx - x) - Math.abs(arr[q].cx - x));
+  pl.shot = true; pl.shotAt = performance.now();
   if (!state.L.shot.includes(pl)) state.L.shot.push(pl);
-  spawnLetter(pl, arr[i], [x, y + 6, 240]);
-  let left = 0; for (let k = 0; k < arr.length; k++) if (!pl.gone[k]) left++;
+  for (const k of alive.slice(0, n)) { pl.gone[k] = true; spawnLetter(pl, arr[k], [x, y + 6, 240]); }
+  const left = Math.max(0, alive.length - n);
   if (left) syncLetters(pl);
   return left;
 }
