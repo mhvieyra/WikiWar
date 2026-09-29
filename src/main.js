@@ -124,12 +124,23 @@ function update(dt) {
   const p = state.p, L = state.L, keys = state.keys;
   S.time += dt; S.cool -= dt; S.gcool -= dt; p.t += dt; p.inv -= dt;
 
-  // Agacharse con C o Shift (ArrowDown/S es aparte, y sigue siendo solo para
-  // bajar de las plataformas). En el aire nunca queda agachado. Al soltar la
-  // tecla solo se para si hay espacio libre arriba, si no sigue agachado.
+  // link cercano (se calcula antes de agacharse: agacharse solo tiene efecto
+  // parado encima de un link).
+  state.near = null;
+  for (let r = Math.floor((p.y - p.h) / RS); r <= Math.floor(p.y / RS) && !state.near; r++) {
+    const arr = L.full.get(r); if (!arr) continue;
+    for (const pl of arr) {
+      if (pl.link && pl.x < p.x + p.w / 2 + 6 && pl.x + pl.w > p.x - p.w / 2 - 6 && pl.y < p.y + 4 && pl.y + pl.h > p.y - p.h) { state.near = pl; break; }
+    }
+  }
+
+  // Agacharse con C o Shift solo funciona parado encima de un link: es la
+  // forma de entrar (ver el keydown de mas abajo, que dispara loadLevel).
+  // En el aire, o lejos de un link, nunca queda agachado. Al soltar la tecla
+  // o alejarse del link solo se para si hay espacio libre arriba.
   const crouchKey = keys.KeyC || keys.ShiftLeft || keys.ShiftRight;
   if (!p.onGround) p.crouch = false;
-  else if (crouchKey) p.crouch = true;
+  else if (crouchKey && state.near) p.crouch = true;
   else if (p.crouch && canStandUp(p)) p.crouch = false;
   p.h = p.crouch ? CROUCH_H : STAND_H;
 
@@ -160,15 +171,6 @@ function update(dt) {
   const tgt = clamp(p.y - state.H * .6, 0, Math.max(0, L.h - state.H));
   state.cam += (tgt - state.cam) * Math.min(1, 6 * dt);
 
-  // link cercano
-  state.near = null;
-  for (let r = Math.floor((p.y - p.h) / RS); r <= Math.floor(p.y / RS) && !state.near; r++) {
-    const arr = L.full.get(r); if (!arr) continue;
-    for (const pl of arr) {
-      if (pl.link && pl.x < p.x + p.w / 2 + 6 && pl.x + pl.w > p.x - p.w / 2 - 6 && pl.y < p.y + 4 && pl.y + pl.h > p.y - p.h) { state.near = pl; break; }
-    }
-  }
-
   // enemigos, balas, granadas
   S.spawnT -= dt; if (S.spawnT <= 0) { S.spawnT = 1.2; spawnEnemy(); }
   for (const e of state.enemies) if (!e.dead) updateEnemy(e, dt);
@@ -188,7 +190,7 @@ function update(dt) {
   for (const q of state.parts) { q.vy += 900 * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.life -= dt; }
   state.parts = state.parts.filter(q => q.life > 0);
   for (const f of state.fx) f.t += dt;
-  state.fx = state.fx.filter(f => f.t < 1);
+  state.fx = state.fx.filter(f => f.t < (f.type === 'die' ? .45 : 1));
   S.shake = Math.max(0, S.shake - 30 * dt);
 
   // las palabras rotas reaparecen
@@ -283,7 +285,7 @@ function draw() {
   if (state.near) {
     const near = state.near;
     const isT = norm(near.link) === norm(S.toCanon) || norm(near.link) === S.toNorm2;
-    const txt = (isT ? 'E · ¡LLEGAR A «' : 'E · entrar a «') + near.link + '»';
+    const txt = (isT ? 'E/C · ¡LLEGAR A «' : 'E/C · entrar a «') + near.link + '»';
     ctx.font = 'bold 12px "Courier New",monospace';
     const w = ctx.measureText(txt).width + 16, bx = Math.round(clamp(p.x - w / 2, 6, state.W - w - 6)), by = Math.round(p.y - 72);
     ctx.fillStyle = '#272727'; ctx.fillRect(bx, by, w, 22); ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, w, 22);
@@ -309,7 +311,9 @@ addEventListener('keydown', e => {
       if (p.onGround && !p.crouch) { p.vy = -JUMP; p.onGround = false; p.holdT = 0; playSfx('jump', 300, .1, 'square', .03, 250); }
       else if (!p.onGround && !p.usedFlip && !p.flying) { p.usedFlip = true; p.flipping = true; p.spin = .01; }
     }
-    if (e.code === 'KeyE' || e.code === 'Enter') { if (state.near) { S.clicks++; loadLevel(state.near.link, false); } }
+    if (e.code === 'KeyE' || e.code === 'Enter' || e.code === 'KeyC' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+      if (state.near) { S.clicks++; loadLevel(state.near.link, false); }
+    }
     if (e.code === 'Digit1') S.wi = 0;
     if (e.code === 'Digit2') S.wi = 1;
     if (e.code === 'Digit3') S.wi = 2;

@@ -17,7 +17,7 @@ export const SPRITES = {
   playerArm: { src: '/sprites/player_arm.png', fw: 16, fh: 16, fps: 1 },
   enemyRun: { src: '/sprites/enemy_run.png', fw: 32, fh: 36, fps: 10 },
   enemyGunner: { src: '/sprites/enemy_gunner.png', fw: 32, fh: 36, fps: 10 },
-  enemyDie: { src: '/sprites/enemy_die.png', fw: 32, fh: 36, fps: 14 },
+  enemyDie: { src: '/sprites/enemy_die.png', fw: 32, fh: 36, fps: 26 },
   gunPistol: { src: '/sprites/gun_pistol.png', fw: 16, fh: 16, fps: 1 },
   gunSmg: { src: '/sprites/gun_smg.png', fw: 24, fh: 16, fps: 1 },
   gunShotgun: { src: '/sprites/gun_shotgun.png', fw: 28, fh: 16, fps: 1 },
