@@ -26,16 +26,16 @@ describe este archivo.
 
 | Archivo | Frame | Frames | Anclaje | Qué es |
 |---|---|---|---|---|
-| `player_idle.png` | 32x32 | 2 a 4 | pies, centro abajo | Jugador quieto |
-| `player_run.png` | 32x32 | 6 a 8 | pies, centro abajo | Jugador corriendo |
-| `player_jump.png` | 32x32 | 1 | pies, centro abajo | Jugador en el aire |
-| `player_fly.png` | 32x32 | 2 a 4 | pies, centro abajo | Jugador volando (jetpack) |
-| `player_crouch.png` | 32x32 | 2 | pies, centro abajo | Jugador agachado quieto (respirando) |
-| `player_crouch_walk.png` | 32x32 | 6 | pies, centro abajo | Jugador agachado caminando |
+| `player_idle.png` | 32x35 | 2 a 4 | pies, centro abajo | Jugador quieto |
+| `player_run.png` | 32x35 | 6 a 8 | pies, centro abajo | Jugador corriendo |
+| `player_jump.png` | 32x35 | 1 | pies, centro abajo | Jugador en el aire |
+| `player_fly.png` | 32x35 | 2 a 4 | pies, centro abajo | Jugador volando (jetpack) |
+| `player_crouch.png` | 32x35 | 2 | pies, centro abajo | Jugador agachado quieto (respirando) |
+| `player_crouch_walk.png` | 32x35 | 6 | pies, centro abajo | Jugador agachado caminando |
 | `player_arm.png` | 16x16 | 1 | hombro en el pixel (1.5, 8.5), apunta a +x | Brazo que apunta al mouse (aparte del cuerpo) |
-| `enemy_run.png` | 32x32 | 6 a 8 | pies, centro abajo | Enemigo cuerpo a cuerpo |
-| `enemy_gunner.png` | 32x32 | 6 a 8 | pies, centro abajo | Enemigo que dispara (con el arma ya dibujada) |
-| `enemy_die.png` | 32x32 | 4 a 6 | pies, centro abajo | Muerte del enemigo (se reproduce una vez) |
+| `enemy_run.png` | 32x35 | 6 a 8 | pies, centro abajo | Enemigo cuerpo a cuerpo |
+| `enemy_gunner.png` | 32x35 | 6 a 8 | pies, centro abajo | Enemigo que dispara (con el arma ya dibujada) |
+| `enemy_die.png` | 32x35 | 4 a 6 | pies, centro abajo | Muerte del enemigo (se reproduce una vez) |
 | `gun_pistol.png` | 16x16 | 1 | 20% desde la izquierda, mitad vertical | Pistola |
 | `gun_smg.png` | 24x16 | 1 | igual | SMG |
 | `gun_shotgun.png` | 28x16 | 1 | igual | Escopeta |
