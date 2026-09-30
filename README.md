@@ -122,3 +122,28 @@ Esto ya está en `vercel.json`, así que importar el repo en Vercel alcanza.
 
 Ver `SPRITES.md` para la lista completa de archivos esperados en
 `public/sprites/` y `public/sounds/`, sus tamaños de frame y sus claves.
+
+## Modo Aventura
+
+Desde el menú, el botón **Modo Aventura** abre siete niveles de plataformas
+que no usan Wikipedia (código en `src/adventure/`). Se controla igual que el
+modo principal, más:
+
+| Tecla | Acción |
+|---|---|
+| S / ↓ / C / Shift | Agacharse (pasa por túneles de 1 tile) y bajar de una plataforma |
+| E | Usar una palanca |
+| R | Reiniciar el nivel |
+
+Mecánicas: jetpack (mantené espacio en el aire, el combustible se recarga en
+el piso o con celdas), cajas empujables, botones pesados (solo los activa una
+caja), palancas, puertas de colores, llaves y cerraduras, bloques agrietados
+(se rompen a tiros), resortes, plataformas móviles, pinchos, lava, puntos de
+control, slimes, murciélagos, torretas y un jefe. Cada nivel da hasta 3
+estrellas (terminar, todas las monedas, sin morir) que se guardan en el
+navegador.
+
+- `levels.js`: los niveles, con un mini DSL y la leyenda de símbolos.
+- `sim.js`: la simulación (sin DOM, se puede correr en Node).
+- `artData.js` / `art.js`: los sprites pixelados (definidos por código) y los fondos.
+- `render.js` y `index.js`: dibujo, menú de niveles, entrada y progreso.

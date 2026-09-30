@@ -151,3 +151,18 @@ button:active{transform:translate(4px,4px);box-shadow:var(--outline),inset 0 4px
 .eloRes.up span{color:var(--green)}
 .eloRes.down span{color:var(--red)}
 .eloRes small{margin-left:auto;font-size:18px;color:var(--muted)}
+
+/* ------------------------------------------------------- modo Aventura */
+body.adv{background:#000;cursor:crosshair}
+body.adv #page,body.adv #top,body.adv #goal,body.adv #help,body.adv #toast{display:none}
+.advbtn{width:100%;margin-top:0!important}
+#advSel{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;font-family:var(--vt);color:var(--text);cursor:default;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px),conic-gradient(#17171b 25%,#1d1d22 0 50%,#17171b 0 75%,#1d1d22 0) 0 0/32px 32px}
+.advcard{width:min(780px,94vw)}
+#advGrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:20px 0 6px}
+.lvl{display:grid;grid-template-columns:44px 1fr;column-gap:14px;text-align:left;background:#d8d4c8;padding:12px 14px 14px;margin:4px;font-family:var(--vt);color:#000}
+.lvl b{grid-row:1/4;align-self:center;font:normal 16px/1 var(--pf);background:var(--accent);padding:14px 0 14px 4px;text-align:center;box-shadow:var(--outline)}
+.lvl .nm{font:10px/14px var(--pf);text-transform:uppercase}
+.lvl small{font-size:18px;line-height:17px;color:#3a3a44;margin-top:4px}
+.lvl em{font-style:normal;font-size:18px;line-height:18px;color:#7a4a00;margin-top:4px}
+@media (max-width:1000px){#advGrid{grid-template-columns:1fr}}
