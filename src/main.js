@@ -18,6 +18,7 @@ import { playSfx, boom, toggleMuted, jetSound } from './audio.js';
 import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
 import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI, toggleHelp, pxBox, PF, VT, pickPair, toMenu } from './ui.js';
 import { openEco, ecoFrame, initEco } from './eco/index.js';
+import { openArena, arenaFrame, initArena } from './arena/index.js';
 
 /* ------------------------------------------------------------------ canvas */
 function resize() {
@@ -386,6 +387,9 @@ initUI();
 // Ecos: puzzles cooperativos contra tus propias grabaciones (src/eco/), independiente de Wikipedia.
 initEco(toMenu);
 $('#bEco').onclick = e => { e.target.blur(); openEco(); };
+// Arena: duelo 1 contra 1 con terreno destructible, contra la compu o en línea (src/arena/).
+initArena(toMenu);
+$('#bArena').onclick = e => { e.target.blur(); openArena(); };
 
 addEventListener('keydown', e => {
   const keys = state.keys;
@@ -430,6 +434,7 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(.033, (now - last) / 1000); last = now;
   if (S.mode === 'eco') ecoFrame(dt);
+  if (S.mode === 'arena') arenaFrame(dt);
   if (S.mode === 'play' && state.L && state.p) update(dt);
   if (state.L && state.p) draw();
   requestAnimationFrame(frame);

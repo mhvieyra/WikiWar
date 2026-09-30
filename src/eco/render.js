@@ -13,20 +13,21 @@ const TOP = 78, BOTTOM = 48;
 
 export function layoutFor(w, W, H) {
   const lw = w.w * T, lh = w.h * T, aw = W - 24, ah = H - TOP - BOTTOM;
-  const zs = Math.max(1, Math.floor(Math.min(aw / lw, ah / lh) * 2)), k = zs / 2;
+  const zs = Math.max(1, Math.floor(Math.min(aw / (lw + 2 * T), ah / lh) * 2)), k = zs / 2;
   return { k, ox: Math.floor((W - lw * k) / 2), oy: TOP + Math.floor((ah - lh * k) / 2) };
 }
 
 function buildLayer(w) {
+  // una columna de margen a cada lado para dibujar las paredes del cuarto
   const th = THEMES[w.def.theme], c = document.createElement('canvas');
-  c.width = w.w * 16; c.height = w.h * 16;
+  c.width = (w.w + 2) * 16; c.height = w.h * 16;
   const g = c.getContext('2d'), rows = w.def.rows;
   const solid = (x, y) => x < 0 || x >= w.w ? true : y < 0 ? true : y >= w.h ? false : rows[y][x] === '#';
-  for (let y = 0; y < w.h; y++) for (let x = 0; x < w.w; x++) {
-    const ch = rows[y][x];
-    if (ch === '#') drawGround(g, x, y, { up: solid(x, y - 1), left: solid(x - 1, y), right: solid(x + 1, y), down: solid(x, y + 1) }, th);
-    else if (ch === '=') drawOneWay(g, x, y, th);
-    else if (ch === '^') drawSpikes(g, x, y);
+  for (let y = 0; y < w.h; y++) for (let x = -1; x <= w.w; x++) {
+    const ch = x < 0 || x >= w.w ? '#' : rows[y][x];
+    if (ch === '#') drawGround(g, x + 1, y, { up: solid(x, y - 1), left: x < 0 ? false : solid(x - 1, y), right: x >= w.w ? false : solid(x + 1, y), down: solid(x, y + 1) }, th);
+    else if (ch === '=') drawOneWay(g, x + 1, y, th);
+    else if (ch === '^') drawSpikes(g, x + 1, y);
   }
   return c;
 }
@@ -86,10 +87,10 @@ export function drawWorld(g, w, W, H, DPR, t, ui) {
   const { k, ox, oy } = layoutFor(w, W, H);
   g.setTransform(DPR * k, 0, 0, DPR * k, ox * DPR, oy * DPR);
   const lw = w.w * T, lh = w.h * T;
-  g.save(); g.beginPath(); g.rect(0, 0, lw, lh + 200); g.clip();
+  g.save(); g.beginPath(); g.rect(-T, 0, lw + 2 * T, lh + 200); g.clip();
 
   const def = w.def; if (!def._layer) def._layer = buildLayer(w);
-  g.drawImage(def._layer, 0, 0, lw, lh);
+  g.drawImage(def._layer, -T, 0, lw + 2 * T, lh);
 
   // lava y decorados
   for (let y = 0; y < w.h; y++) for (let x = 0; x < w.w; x++) {

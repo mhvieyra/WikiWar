@@ -154,7 +154,8 @@ button:active{transform:translate(4px,4px);box-shadow:var(--outline),inset 0 4px
 
 /* ------------------------------------------------------------ modo Ecos */
 body.eco{background:#000;cursor:crosshair}
-body.eco #page,body.eco #top,body.eco #goal,body.eco #help,body.eco #toast{display:none}
+body.eco #page,body.eco #top,body.eco #goal,body.eco #help,body.eco #toast,body.arena #page,body.arena #top,body.arena #goal,body.arena #help,body.arena #toast{display:none}
+body.arena{background:#000;cursor:crosshair}
 .modebtn{width:100%;margin-top:0!important}
 #ecoSel{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;font-family:var(--vt);color:var(--text);cursor:default;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px),conic-gradient(#17171b 25%,#1d1d22 0 50%,#17171b 0 75%,#1d1d22 0) 0 0/32px 32px}
@@ -179,3 +180,12 @@ body.eco #page,body.eco #top,body.eco #goal,body.eco #help,body.eco #toast{displ
 #ecoImpMsg .ok{color:var(--green)}#ecoImpMsg .bad{color:var(--red)}
 .codebox{width:100%;padding:8px 10px;background:#0c0c0e;color:var(--gold);border:0;font:20px/22px var(--vt);user-select:text;box-shadow:var(--outline),inset 0 4px 0 0 rgba(0,0,0,.6)}
 @media (max-width:1000px){#ecoGrid{grid-template-columns:1fr}}
+
+/* ---------------------------------------------------------------- Arena */
+#arenaSel{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;font-family:var(--vt);color:var(--text);cursor:default;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px),conic-gradient(#17171b 25%,#1d1d22 0 50%,#17171b 0 75%,#1d1d22 0) 0 0/32px 32px}
+.arenacard{width:min(640px,94vw)}
+.arenacard .sec{margin-top:18px}
+.arenacard .row button{flex:1}
+.arenacard textarea{width:100%;margin-top:10px;padding:8px 10px;background:#0c0c0e;color:var(--gold);border:0;font:16px/17px var(--vt);resize:none;user-select:text;outline:none;box-shadow:var(--outline),inset 0 4px 0 0 rgba(0,0,0,.6)}
+#arNet p{margin:12px 0 0;font-size:19px;line-height:19px}

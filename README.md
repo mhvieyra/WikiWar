@@ -123,27 +123,62 @@ Esto ya está en `vercel.json`, así que importar el repo en Vercel alcanza.
 Ver `SPRITES.md` para la lista completa de archivos esperados en
 `public/sprites/` y `public/sounds/`, sus tamaños de frame y sus claves.
 
-## Modo Aventura
+## Ecos
 
-Desde el menú, el botón **Modo Aventura** abre siete niveles de plataformas
-que no usan Wikipedia (código en `src/adventure/`). Se controla igual que el
-modo principal, más:
+Desde el menú, **Ecos** es un juego de puzles que no usa Wikipedia (`src/eco/`).
+Cada intento (ciclo) se graba, y en el ciclo siguiente esa versión tuya, un
+*eco*, repite lo que hiciste mientras jugás el ciclo nuevo. Los ecos son cuerpos
+de verdad: aprietan botones, tiran palancas, disparan a dianas, empujan cajas y
+sirven de escalón. Hay que llegar a la salida con la menor cantidad de ecos
+posible (y después con el menor tiempo).
 
 | Tecla | Acción |
 |---|---|
-| S / ↓ / C / Shift | Agacharse (pasa por túneles de 1 tile) y bajar de una plataforma |
+| A / D | Mover |
+| Espacio / W | Saltar |
+| S / C / Shift | Agacharse y bajar de una plataforma |
+| Click | Disparar (para las dianas) |
 | E | Usar una palanca |
-| R | Reiniciar el nivel |
+| R | Cerrar el ciclo y guardarlo como eco |
+| Q | Reiniciar el ciclo sin guardarlo |
+| Retroceso | Quitar el último eco |
 
-Mecánicas: jetpack (mantené espacio en el aire, el combustible se recarga en
-el piso o con celdas), cajas empujables, botones pesados (solo los activa una
-caja), palancas, puertas de colores, llaves y cerraduras, bloques agrietados
-(se rompen a tiros), resortes, plataformas móviles, pinchos, lava, puntos de
-control, slimes, murciélagos, torretas y un jefe. Cada nivel da hasta 3
-estrellas (terminar, todas las monedas, sin morir) que se guardan en el
-navegador.
+Mecánicas: botones pesados (todos los del mismo color tienen que estar
+apretados), puertas y puertas invertidas, palancas, pulsadores que abren por un
+instante, dianas, cajas, resortes, plataformas móviles, pinchos y lava.
 
-- `levels.js`: los niveles, con un mini DSL y la leyenda de símbolos.
-- `sim.js`: la simulación (sin DOM, se puede correr en Node).
-- `artData.js` / `art.js`: los sprites pixelados (definidos por código) y los fondos.
-- `render.js` y `index.js`: dibujo, menú de niveles, entrada y progreso.
+- **Desafío diario:** el mismo nivel para todos cada día (fecha en UTC), con racha.
+- **Ranking local y códigos de repetición:** al resolver un nivel te da un código
+  `ECO1-...`. Cualquiera puede pegarlo en «Código de repetición»: el juego lo
+  verifica volviendo a simular la solución (no se puede falsificar) y permite
+  verla o competir contra ese resultado.
+- Los 8 niveles están en `src/eco/levels.js` con su leyenda de símbolos. Las
+  soluciones de referencia (`src/eco/solutions.js`) las genera un bot
+  (`tools/eco-bot.mjs`) y se verifican con `node tools/test-eco.mjs`.
+
+## Arena
+
+**Arena** es un duelo 1 contra 1 con terreno destructible (`src/arena/`). Se
+juega contra la computadora (tres niveles) o en línea. El primero en ganar 3
+rondas gana la partida.
+
+| Control | Acción |
+|---|---|
+| A / D, Espacio | Mover, saltar y volar con el jetpack (mantené espacio en el aire) |
+| Click / Click derecho | Disparar / picar (cava y saca oro; también pega de cerca) |
+| 1 a 4 (o rueda) | Pistola, escopeta, bazuca (rompe el terreno), láser (atraviesa la tierra) |
+| Q | Construir un bloque de 3x3 (cuesta oro) |
+| Z / X / C | Comprar: curarte, combustible, munición del arma elegida |
+
+El oro sale de las vetas al romper el terreno (con cualquier arma). El mercado
+es **compartido**: cada compra sube el precio para los dos. Caen cajas de
+suministro del cielo cada 12 s, y a los 40 s empieza a subir la lava.
+
+**En línea** no necesita servidor: la simulación es determinista, así que solo
+se intercambian las entradas de cada tick (lockstep) y se comparan hashes del
+estado para detectar desincronizaciones. Para conectar, quien crea la partida le
+manda un código al otro, el otro devuelve su respuesta y listo (WebRTC con
+códigos para copiar y pegar; usa el STUN público de Google, y con algunos NAT
+estrictos puede no conectar). «Dos pestañas en esta PC» sirve para probar.
+`node tools/test-arena.mjs` verifica determinismo, simetría del mapa y partidas
+de bot contra bot.
