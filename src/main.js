@@ -17,7 +17,7 @@ import { makeCrater, holeTouches, inCrater, shedLetters, shootLetter, letterGone
 import { playSfx, boom, toggleMuted, jetSound } from './audio.js';
 import { okSpr, drawSpr, SHOULDER_STAND_Y, SHOULDER_CROUCH_Y, CHEST_Y } from './sprites.js';
 import { fade, toast, win, gameOver, pause, hideMsg, setGoal, drawHud, updateHud, initUI, toggleHelp, pxBox, PF, VT, pickPair, toMenu } from './ui.js';
-import { openAdventure, advFrame, initAdventure } from './adventure/index.js';
+import { openEco, ecoFrame, initEco } from './eco/index.js';
 
 /* ------------------------------------------------------------------ canvas */
 function resize() {
@@ -383,14 +383,14 @@ function draw() {
 
 /* ------------------------------------------------------------------- input */
 initUI();
-// Modo Aventura: niveles de plataformas independientes de Wikipedia (src/adventure/).
-initAdventure(toMenu);
-$('#bAdv').onclick = e => { e.target.blur(); openAdventure(); };
+// Ecos: puzzles cooperativos contra tus propias grabaciones (src/eco/), independiente de Wikipedia.
+initEco(toMenu);
+$('#bEco').onclick = e => { e.target.blur(); openEco(); };
 
 addEventListener('keydown', e => {
   const keys = state.keys;
   if (e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
-  if (S.mode === 'adv') return;   // el modo Aventura maneja sus propias teclas
+  if (S.mode === 'eco' || S.mode === 'arena') return;   // Ecos y Arena manejan sus propias teclas
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code) && S.mode !== 'menu') e.preventDefault();
   if (e.code === 'Escape') { if (S.mode === 'pause') { hideMsg(); S.mode = 'play'; } else pause(); return; }
   if (e.code === 'KeyH') { toggleHelp(); return; }
@@ -429,7 +429,7 @@ addEventListener('wheel', e => { if (S.mode === 'play') S.wi = (S.wi + (e.deltaY
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(.033, (now - last) / 1000); last = now;
-  if (S.mode === 'adv') advFrame(dt);
+  if (S.mode === 'eco') ecoFrame(dt);
   if (S.mode === 'play' && state.L && state.p) update(dt);
   if (state.L && state.p) draw();
   requestAnimationFrame(frame);
