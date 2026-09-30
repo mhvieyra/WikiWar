@@ -34,16 +34,8 @@ export function flashOf(c) {
 }
 
 /* ----------------------------------------------------------- sprites por codigo */
-// moneda: 4 frames de giro
-SP.coin = [10, 8, 4, 8].map(w => {
-  const c = mk(16, 16), g = c.getContext('2d'), x = 8 - w / 2;
-  R(g, x, 3, w, 10, PAL.k); R(g, x + 1, 2, w - 2, 12, PAL.k);
-  R(g, x + 1, 3, w - 2, 10, PAL.Y); if (w > 4) { R(g, x + 2, 4, w - 4, 8, PAL.y); R(g, x + 2, 4, 1, 4, PAL.w); R(g, 7, 6, 2, 4, PAL.Y); }
-  return c;
-});
-
 // puertas, botones, palancas: [canal 1..3][estado]
-export const DOOR = [], PLATE = [], LEVER = [];
+export const DOOR = [], PLATE = [], LEVER = [], DOORINV = [], PAD = [], TARGET = [];
 CHANNEL.forEach((col, ch) => {
   if (!col) return;
   const door = [false, true].map(open => {
@@ -74,16 +66,31 @@ CHANNEL.forEach((col, ch) => {
     R(g, kx - 2, 2, 5, 5, PAL.k); R(g, kx - 1, 3, 3, 3, on ? col.main : col.dark); if (on) R(g, kx - 1, 3, 1, 1, col.light);
     return c;
   });
-  DOOR[ch] = door; PLATE[ch] = plate; LEVER[ch] = lever;
+  // puerta invertida: cerrada mientras su canal esta activo. Lleva franjas de peligro para distinguirla.
+  const inv = mk(16, 16), gi = inv.getContext('2d');
+  R(gi, 0, 0, 16, 16, PAL.k); R(gi, 1, 0, 14, 16, '#3a3d4a');
+  for (let y = 0; y < 16; y += 4) { R(gi, 2, y, 12, 2, col.main); R(gi, 2, y + 2, 12, 2, PAL.k); }
+  R(gi, 2, 0, 12, 1, col.light);
+  // pulsador: disco en el piso, se ilumina al usarse
+  const pad = [false, true].map(hot => {
+    const c = mk(16, 16), g = c.getContext('2d');
+    R(g, 1, 13, 14, 3, PAL.k); R(g, 2, 13, 12, 2, PAL.d);
+    R(g, 3, 11, 10, 3, PAL.k); R(g, 4, 11, 8, 2, hot ? col.light : col.main); R(g, 4, 11, 8, 1, hot ? '#fff' : col.light);
+    R(g, 7, 9, 2, 2, hot ? '#fff' : col.dark); R(g, 6, 8, 4, 1, hot ? '#fff' : col.dark);
+    return c;
+  });
+  // diana en la pared
+  const tgt = [false, true].map(hot => {
+    const c = mk(16, 16), g = c.getContext('2d');
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const d = Math.sqrt((x - 7.5) * (x - 7.5) + (y - 7.5) * (y - 7.5));
+      if (d > 7) continue;
+      R(g, x, y, 1, 1, d > 6 ? PAL.k : d > 4.5 ? (hot ? col.light : col.main) : d > 3 ? PAL.w : d > 1.6 ? (hot ? col.light : col.dark) : PAL.k);
+    }
+    return c;
+  });
+  DOOR[ch] = door; PLATE[ch] = plate; LEVER[ch] = lever; DOORINV[ch] = inv; PAD[ch] = pad; TARGET[ch] = tgt;
 });
-
-SP.lock = [(() => {
-  const c = mk(16, 16), g = c.getContext('2d');
-  R(g, 0, 0, 16, 16, PAL.k); R(g, 1, 1, 14, 14, PAL.Y); R(g, 2, 2, 12, 12, PAL.y); R(g, 2, 2, 12, 1, '#fff2c0');
-  R(g, 2, 13, 12, 1, PAL.Y); R(g, 6, 5, 4, 4, PAL.k); R(g, 7, 8, 2, 4, PAL.k);
-  [[3, 3], [12, 3], [3, 12], [12, 12]].forEach(([x, y]) => R(g, x, y, 1, 1, PAL.Y));
-  return c;
-})()];
 
 SP.sign = [(() => {
   const c = mk(16, 16), g = c.getContext('2d');
@@ -93,16 +100,6 @@ SP.sign = [(() => {
   return c;
 })()];
 
-// bloque agrietado, 3 etapas de daño
-SP.cracked = [0, 1, 2].map(stage => {
-  const c = mk(16, 16), g = c.getContext('2d');
-  R(g, 0, 0, 16, 16, PAL.k); R(g, 1, 1, 14, 14, '#7b7488'); R(g, 1, 1, 14, 2, '#9a94ab'); R(g, 1, 13, 14, 2, '#5d576b');
-  const cracks = [[[6, 3], [7, 5], [6, 7], [8, 9]], [[11, 2], [10, 5], [12, 8], [11, 11]], [[3, 9], [5, 10], [4, 12], [6, 13]], [[9, 9], [8, 12], [10, 14]]];
-  cracks.slice(0, 1 + stage * 1.5 | 0).forEach(l => l.forEach(([x, y]) => R(g, x, y, 1, 1, PAL.k)));
-  if (stage === 0) { R(g, 4, 4, 1, 1, '#5d576b'); R(g, 11, 10, 1, 1, '#5d576b'); }
-  return c;
-});
-
 // segmentos de plataforma movil: izquierda, medio, derecha (16x8)
 SP.mover = ['L', 'M', 'R'].map(k => {
   const c = mk(16, 8), g = c.getContext('2d');
@@ -111,29 +108,6 @@ SP.mover = ['L', 'M', 'R'].map(k => {
   if (k === 'L') R(g, 0, 0, 1, 8, 'rgba(0,0,0,0)'), g.clearRect(0, 0, 1, 1), g.clearRect(0, 7, 1, 1);
   if (k === 'R') g.clearRect(15, 0, 1, 1), g.clearRect(15, 7, 1, 1);
   R(g, k === 'L' ? 3 : k === 'R' ? 11 : 7, 3, 2, 2, PAL.y);
-  return c;
-});
-
-// cuerpo del jefe (32x32) por codigo: esfera metalica con un gran ojo
-SP.boss = [0, 1].map(hot => {
-  const c = mk(32, 32), g = c.getContext('2d'), cx = 15.5, cy = 15.5;
-  for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
-    const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy);
-    if (d > 15.5) continue;
-    let col = PAL.G;
-    if (d > 14) col = PAL.k;
-    else if (dx + dy < -8) col = PAL.g; else if (dx + dy > 10) col = PAL.d;
-    if (hot && d <= 14) col = dx + dy < -8 ? '#ff9b7a' : dx + dy > 10 ? PAL.R : PAL.r;
-    R(g, x, y, 1, 1, col);
-  }
-  // panel del ojo
-  for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
-    const dx = (x - cx) / 10.5, dy = (y - cy) / 8.5, d = dx * dx + dy * dy;
-    if (d <= 1) R(g, x, y, 1, 1, d > .8 ? PAL.k : '#f4f1e8');
-  }
-  // tornillos y antenas
-  [[6, 6], [25, 6], [6, 25], [25, 25]].forEach(([x, y]) => R(g, x, y, 2, 2, PAL.k));
-  R(g, 15, 0, 2, 3, PAL.k); R(g, 14, 0, 4, 1, PAL.r);
   return c;
 });
 
