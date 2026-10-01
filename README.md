@@ -152,14 +152,15 @@ instante, dianas, cajas, resortes, plataformas móviles, pinchos y lava.
   `ECO1-...`. Cualquiera puede pegarlo en «Código de repetición»: el juego lo
   verifica volviendo a simular la solución (no se puede falsificar) y permite
   verla o competir contra ese resultado.
-- Los 8 niveles están en `src/eco/levels.js` con su leyenda de símbolos. Las
+- Los 7 niveles (todos difíciles: par de 2 a 5 ecos, pinchos, lava y ventanas de
+  1,2 s) están en `src/eco/levels.js` con su leyenda de símbolos. Las
   soluciones de referencia (`src/eco/solutions.js`) las genera un bot
   (`tools/eco-bot.mjs`) y se verifican con `node tools/test-eco.mjs`.
 
 ## Arena
 
-**Arena** es un duelo 1 contra 1 con terreno destructible (`src/arena/`). Se
-juega contra la computadora (tres niveles) o en línea. El primero en ganar 3
+**Arena** es un duelo contra la computadora (tres niveles de dificultad) con
+terreno destructible (`src/arena/`). No hay modo multijugador. El primero en ganar 3
 rondas gana la partida.
 
 | Control | Acción |
@@ -174,11 +175,5 @@ El oro sale de las vetas al romper el terreno (con cualquier arma). El mercado
 es **compartido**: cada compra sube el precio para los dos. Caen cajas de
 suministro del cielo cada 12 s, y a los 40 s empieza a subir la lava.
 
-**En línea** no necesita servidor: la simulación es determinista, así que solo
-se intercambian las entradas de cada tick (lockstep) y se comparan hashes del
-estado para detectar desincronizaciones. Para conectar, quien crea la partida le
-manda un código al otro, el otro devuelve su respuesta y listo (WebRTC con
-códigos para copiar y pegar; usa el STUN público de Google, y con algunos NAT
-estrictos puede no conectar). «Dos pestañas en esta PC» sirve para probar.
 `node tools/test-arena.mjs` verifica determinismo, simetría del mapa y partidas
 de bot contra bot.

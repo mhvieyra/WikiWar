@@ -1,8 +1,7 @@
 // Simulacion de la Arena: duelo 1 contra 1 con terreno destructible.
 //
-// Es determinista y no toca el DOM: dos navegadores que reciben las mismas
-// entradas por tick calculan exactamente el mismo estado, asi que para jugar en
-// linea alcanza con intercambiar entradas (ver net.js). Por eso no usa
+// Es determinista y no toca el DOM: las mismas entradas por tick dan siempre
+// el mismo estado, lo que permite probarla con bots. Por eso no usa
 // Math.random ni trigonometria del navegador: solo + - * / sqrt floor, el PRNG
 // de shared/dmath.js y la tabla AIM de 64 direcciones.
 //

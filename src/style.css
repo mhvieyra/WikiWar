@@ -188,4 +188,3 @@ body.arena{background:#000;cursor:crosshair}
 .arenacard .sec{margin-top:18px}
 .arenacard .row button{flex:1}
 .arenacard textarea{width:100%;margin-top:10px;padding:8px 10px;background:#0c0c0e;color:var(--gold);border:0;font:16px/17px var(--vt);resize:none;user-select:text;outline:none;box-shadow:var(--outline),inset 0 4px 0 0 rgba(0,0,0,.6)}
-#arNet p{margin:12px 0 0;font-size:19px;line-height:19px}

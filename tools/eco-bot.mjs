@@ -54,29 +54,34 @@ export function solveRun(def, echoes, { target, goal, minTick = 0, budgetMs = 60
 
 // recetas: cada ciclo tiene un objetivo (posicion y condicion); el ultimo es ganar
 const at = (w, tx, ty, r = 20) => Math.abs(w.live.x - (tx * T + T / 2)) < r && Math.abs(w.live.y - (ty + 1) * T) < 4 && w.live.onGround;
+// ayudas para describir objetivos: estar parado en (x, y) con la tolerancia dada
+const onAt = (w, px, py, r = 4) => w.live.onGround && Math.abs(w.live.x - px) < r && Math.abs(w.live.y - py) < 2;
+const plate = (i, tx, ty, name) => ({ name, target: [tx, ty], goal: w => at(w, tx, ty, 12) && w.plates[i].down, hold: 3 });
 const RECIPES = {
-  1: [{ name: 'eco: sostener boton', target: [5, 9], goal: w => at(w, 5, 9, 12) && w.plates[0].down, hold: 3 }, { name: 'cruzar', final: true }],
-  2: [{ name: 'eco: boton A', target: [6, 9], goal: w => at(w, 6, 9, 12) && w.plates[0].down, hold: 3 }, { name: 'eco: boton B', target: [9, 9], goal: w => at(w, 9, 9, 12) && w.plates[1].down, hold: 3 }, { name: 'cruzar', final: true }],
-  3: [{ name: 'eco: escalon contra la pared', target: [13, 11], goal: w => w.live.onGround && w.live.x > 14 * 32 - 14 && w.live.y > 11 * 32, hold: 3 },
-      { name: 'eco: subir al boton', target: [15, 8], goal: w => at(w, 15, 8, 12) && w.plates[0].down, hold: 3 }, { name: 'cruzar', final: true }],
-  4: [{ name: 'eco: pulsar tarde', target: [5, 9], goal: w => w.pads[0].hot > 0 && w.tick >= 110, minTick: 110, hold: 0 }, { name: 'cruzar', final: true }],
-  5: [{ name: 'eco: boton 1', target: [8, 11], goal: w => at(w, 8, 11, 12) && w.plates[0].down, hold: 3 }, { name: 'eco: boton 2', target: [17, 11], goal: w => at(w, 17, 11, 12) && w.plates[1].down, hold: 3 }, { name: 'cruzar', final: true }],
-  6: [{ name: 'eco: caja y arriba (guion)', script: [[R, 120], [R | J, 20], [R, 40], [0, 30]], target: [14, 13], hfn: w => Math.abs(w.crates[0].x - 465) * 2 + Math.abs(w.live.x - 465) + (w.live.y > 430 ? 40 : 0), goal: w => w.crates[0].x > 15 * 32 - 20 && w.live.y < 14 * 32 - 25 && w.live.onGround, hold: 3 }, { name: 'subir', final: true }],
-  7: [{ name: 'eco: pulsar', target: [5, 9], goal: w => w.pads[0].hot > 0 && w.tick >= 60, minTick: 60, hold: 0 }, { name: 'eco: peso 2', target: [17, 9], goal: w => at(w, 17, 9, 12) && w.plates[0].down, hold: 3 }, { name: 'cruzar', final: true }],
-  8: [{ name: 'eco A: escalon y luego contrapeso', make: def => relevoA(def) }, { name: 'eco: palanca', target: [4, 8], goal: w => w.levers[0].on && at(w, 4, 8, 40), hold: 0 }, { name: 'cruzar', final: true }]
+  1: [plate(0, 13, 9, 'eco: boton 1'), plate(1, 22, 9, 'eco: boton 2'), plate(2, 31, 9, 'eco: boton 3'), { name: 'cruzar', final: true }],
+  2: [{ name: 'eco A: contra la muralla', target: [13, 11], goal: w => onAt(w, 440, 384), hold: 3 },
+      { name: 'eco B: sobre A', target: [13, 10], goal: w => onAt(w, 440, 344, 6), hold: 3 },
+      { name: 'eco C: sobre B', target: [13, 9], goal: w => onAt(w, 440, 304, 6), hold: 3 },
+      { name: 'trepar', final: true }],
+  3: [plate(0, 4, 9, 'eco: boton 1a'), plate(1, 7, 9, 'eco: boton 1b'), plate(2, 15, 9, 'eco: boton 2a'), plate(3, 18, 9, 'eco: boton 2b'), { name: 'cruzar', final: true }],
+  4: [{ name: 'eco: pulsar la primera', target: [4, 9], goal: w => w.pulse[1] > 120 && w.tick >= 80, minTick: 80 },
+      { name: 'eco: pulsar la segunda', target: [19, 9], goal: w => w.pulse[2] > 120 && w.tick >= 190, minTick: 190 },
+      { name: 'cruzar', final: true }],
+  5: [{ name: 'eco A: contra el bloque', target: [7, 11], goal: w => onAt(w, 248, 384), hold: 3 },
+      { name: 'eco B: sobre A', target: [7, 10], goal: w => onAt(w, 248, 344, 6), hold: 3 },
+      plate(0, 9, 6, 'eco C: subir al boton'),
+      { name: 'cruzar', final: true }],
+  6: [{ name: 'eco A: contra el bloque', target: [7, 11], goal: w => onAt(w, 248, 384), hold: 3 },
+      { name: 'eco B: sobre A', target: [7, 10], goal: w => onAt(w, 248, 344, 6), hold: 3 },
+      { name: 'eco C: palanca', target: [10, 6], goal: w => w.levers[0].on && at(w, 10, 6, 40), hold: 0 },
+      plate(0, 18, 11, 'eco D: peso en la segunda puerta'),
+      { name: 'cruzar', final: true }],
+  7: [plate(0, 4, 11, 'eco: boton 1'), plate(1, 7, 11, 'eco: boton 2'),
+      { name: 'eco A: contra la muralla', target: [21, 11], goal: w => onAt(w, 696, 384), hold: 3 },
+      { name: 'eco B: sobre A', target: [21, 10], goal: w => onAt(w, 696, 344, 6), hold: 3 },
+      { name: 'eco C: sobre B', target: [21, 9], goal: w => onAt(w, 696, 304, 6), hold: 3 },
+      { name: 'trepar', final: true }]
 };
-// Nivel 8: el eco A espera contra la pared (escalon de B), y mas tarde cruza la puerta ya abierta y se queda en el boton 2.
-function relevoA(def) {
-  const wait = 420;
-  for (let n = 40; n < 160; n++) {
-    const log = [...Array(70).fill(L), ...Array(wait - 70).fill(0), ...Array(n).fill(R)];
-    const w = createWorld(def, [log]);
-    w.levers[0].on = true; for (const d of w.doors) d.open = true;     // como si B ya hubiera tirado la palanca
-    for (let t = 0; t < 900; t++) { stepTick(w, 0); }
-    if (w.plates[0].down && !w.actors[0].dead) return log;
-  }
-  throw new Error('no encontre la receta de A');
-}
 export { RECIPES, at };
 
 if (process.argv[1].endsWith('eco-bot.mjs')) {
@@ -87,7 +92,7 @@ if (process.argv[1].endsWith('eco-bot.mjs')) {
     if (rc.make) { const log = rc.make(def); echoes.push(log); console.log(' eco', i + 1, rc.name, 'construido', log.length, 'ticks'); continue; }
     if (rc.script) { const log = rc.script.flatMap(([m, n]) => Array(n).fill(m)); echoes.push(log); console.log(' eco', i + 1, rc.name, 'guion', log.length, 'ticks'); continue; }
     if (rc.final) {
-      const r = solveRun(def, echoes, { target: [def.rows[0].length - 1 && findX(def)[0], findX(def)[1]], goal: w => w.won, budgetMs: 120000 });
+      const r = solveRun(def, echoes, { target: [def.rows[0].length - 1 && findX(def)[0], findX(def)[1]], goal: w => w.won, budgetMs: 400000 });
       console.log(' ciclo final', r.ok ? `OK ${r.nodes} nodos ${r.secs.toFixed(1)}s (${r.log.length} ticks)` : 'FALLO mejor ' + r.best);
       if (!r.ok) process.exit(1);
       const v = verify(def, [...echoes, r.log]);
@@ -95,7 +100,7 @@ if (process.argv[1].endsWith('eco-bot.mjs')) {
       console.log('SOL', JSON.stringify([...echoes, r.log]));
       break;
     }
-    const r = solveRun(def, echoes, { target: rc.target, goal: rc.goal, minTick: rc.minTick || 0, budgetMs: 120000, hold: rc.hold || 0, hfn: rc.hfn });
+    const r = solveRun(def, echoes, { target: rc.target, goal: rc.goal, minTick: rc.minTick || 0, budgetMs: 400000, hold: rc.hold || 0, hfn: rc.hfn });
     console.log(' eco', i + 1, rc.name, r.ok ? `OK ${r.nodes} nodos ${r.secs.toFixed(1)}s (${r.log.length} ticks)` : 'FALLO mejor ' + r.best);
     if (!r.ok) process.exit(1);
     echoes.push(r.log);
