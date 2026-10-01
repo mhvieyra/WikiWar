@@ -38,50 +38,46 @@ function build(W, H, fn) {
 const defs = [];
 const level = (id, name, theme, desc, meta, W, H, fn) => defs.push({ id, name, theme, desc, ...meta, ...build(W, H, fn) });
 
-level(1, 'Contrapeso', 'cave', 'Tu eco sostiene el botón mientras vos cruzás.', { limit: 20, par: 1 }, 24, 12, L => {
+level(1, 'Tres llaves', 'cave', 'Tres botones sobre pinchos y una sola puerta. Nadie cruza solo.', { limit: 10, par: 3 }, 37, 12, L => {
   L.room(10);
-  L.put(2, 9, 'P'); L.put(5, 9, '1'); L.gate(12, 6, 9, 'a'); L.put(20, 9, 'X');
-  L.sign(3, 9, 'R: cerrar ciclo. Tus ciclos anteriores se repiten solos.');
+  for (const [a, b] of [[8, 10], [17, 19], [26, 28]]) L.fill(a, 10, b, 10, '^');
+  L.put(2, 9, 'P'); L.put(13, 9, '1'); L.put(22, 9, '1'); L.put(31, 9, '1'); L.gate(34, 6, 9, 'a'); L.put(36, 9, 'X');
 });
 
-level(2, 'Dos pesos', 'cave', 'Una puerta, dos botones y un solo cuerpo.', { limit: 25, par: 2 }, 28, 12, L => {
-  L.room(10);
-  L.put(3, 9, 'P'); L.put(6, 9, '1'); L.put(9, 9, '1'); L.gate(14, 6, 9, 'a'); L.put(24, 9, 'X');
-  L.sign(4, 9, 'La puerta abre si TODOS los botones del mismo color están apretados.');
-});
-
-level(3, 'Escalón vivo', 'night', 'Un eco quieto es una escalera.', { limit: 30, par: 2 }, 26, 14, L => {
-  L.room(12); L.fill(14, 9, 25, 13);
-  L.put(3, 11, 'P'); L.put(15, 8, '1'); L.gate(20, 5, 8, 'a'); L.put(23, 8, 'X');
-  L.sign(4, 11, 'Sobre la cabeza de un eco podés llegar más alto.');
-});
-
-level(4, 'Ventana', 'factory', 'La puerta solo abre un instante.', { limit: 15, par: 1, pulse: 1.5 }, 30, 12, L => {
-  L.room(10);
-  L.put(2, 9, 'P'); L.put(5, 9, 'u'); L.gate(22, 6, 9, 'a'); L.put(27, 9, 'X');
-  L.sign(3, 9, 'El pulsador abre la puerta 1,5 s. Quedarse encima no lo mantiene.');
-});
-
-level(5, 'Cadena', 'cave', 'Cada eco le abre el camino al siguiente.', { limit: 30, par: 2 }, 32, 14, L => {
+level(2, 'Torre de ecos', 'night', 'Una muralla de seis bloques y lava al otro lado. Subí sobre tus propios fantasmas.', { limit: 12, par: 3 }, 30, 14, L => {
   L.room(12);
-  L.put(2, 11, 'P'); L.put(8, 11, '1'); L.gate(12, 8, 11, 'a'); L.put(17, 11, '2'); L.gate(22, 8, 11, 'b'); L.put(28, 11, 'X');
+  L.fill(14, 6, 20, 11); L.fill(21, 12, 24, 12, '~'); L.fill(25, 6, 29, 11);
+  L.put(2, 11, 'P'); L.put(27, 5, 'X');
 });
 
-level(6, 'Torre', 'night', 'Una caja, un eco y una cornisa demasiado alta.', { limit: 30, par: 1 }, 26, 16, L => {
-  L.room(14); L.fill(15, 10, 25, 15);
-  L.put(2, 13, 'P'); L.put(6, 13, 'M'); L.put(23, 9, 'X');
-  L.sign(3, 13, 'Empujá la caja contra la pared y subite.');
-});
-
-level(7, 'Ventana y peso', 'factory', 'Cruzá en el instante justo y dejá algo pesando.', { limit: 30, par: 2, pulse: 1.5 }, 34, 12, L => {
+level(3, 'Dos cerraduras', 'factory', 'Dos puertas en serie, cuatro botones. Los ecos de la primera abren paso a los de la segunda.', { limit: 14, par: 4 }, 34, 12, L => {
   L.room(10);
-  L.put(2, 9, 'P'); L.put(5, 9, 'u'); L.gate(12, 6, 9, 'a'); L.put(17, 9, '2'); L.gate(23, 6, 9, 'b'); L.put(30, 9, 'X');
+  L.put(2, 9, 'P'); L.put(4, 9, '1'); L.put(7, 9, '1'); L.gate(11, 6, 9, 'a');
+  L.put(15, 9, '2'); L.put(18, 9, '2'); L.gate(24, 6, 9, 'b'); L.fill(26, 10, 28, 10, '^'); L.put(32, 9, 'X');
 });
 
-level(8, 'Relevos', 'night', 'Un eco puede servir de escalón y después de contrapeso.', { limit: 40, par: 2 }, 30, 14, L => {
-  L.room(12); L.fill(1, 9, 7, 13);
-  L.put(11, 11, 'P'); L.put(4, 8, '4'); L.gate(16, 8, 11, 'a'); L.put(20, 11, '2'); L.gate(24, 8, 11, 'b'); L.put(27, 11, 'X');
-  L.sign(10, 11, 'E: usar la palanca (queda puesta).');
+level(4, 'Ventana larga', 'factory', 'Cada puerta se abre 1,2 s y queda lejos de su pulsador. Alguien tiene que pisar a tiempo.', { limit: 10, par: 2, pulse: 1.2 }, 44, 12, L => {
+  L.room(10);
+  L.put(2, 9, 'P'); L.put(4, 9, 'u'); L.gate(16, 6, 9, 'a'); L.put(19, 9, 'v'); L.gate(31, 6, 9, 'b');
+  L.fill(35, 10, 37, 10, '^'); L.put(42, 9, 'X');
+});
+
+level(5, 'Escalera y peso', 'night', 'El botón está sobre un bloque demasiado alto. Dos ecos hacen de escalera y un tercero lo pisa.', { limit: 14, par: 3 }, 30, 14, L => {
+  L.room(12);
+  L.fill(8, 7, 11, 11); L.put(9, 6, '1');
+  L.put(2, 11, 'P'); L.gate(18, 8, 11, 'a'); L.fill(22, 12, 24, 12, '~'); L.put(27, 11, 'X');
+});
+
+level(6, 'Palanca alta', 'night', 'La palanca está arriba, la segunda puerta pide peso y hay pinchos de por medio.', { limit: 18, par: 4 }, 36, 14, L => {
+  L.room(12);
+  L.fill(8, 7, 11, 11); L.put(10, 6, '4');
+  L.put(2, 11, 'P'); L.gate(14, 8, 11, 'a'); L.put(18, 11, '2'); L.gate(22, 8, 11, 'b'); L.fill(25, 12, 27, 12, '^'); L.put(33, 11, 'X');
+});
+
+level(7, 'La gran muralla', 'cave', 'Primero hay que abrir la puerta. Después, una torre de tres ecos para pasar la muralla y la lava.', { limit: 20, par: 5 }, 44, 14, L => {
+  L.room(12);
+  L.put(2, 11, 'P'); L.put(4, 11, '1'); L.put(7, 11, '1'); L.gate(11, 8, 11, 'a');
+  L.fill(22, 6, 28, 11); L.fill(29, 12, 32, 12, '~'); L.fill(33, 6, 43, 11); L.put(36, 5, 'X');
 });
 
 export const LEVELS = defs;
